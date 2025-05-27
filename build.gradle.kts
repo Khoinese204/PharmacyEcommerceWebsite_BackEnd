@@ -18,6 +18,9 @@ repositories {
 }
 
 dependencies {
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5") 
+
+
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -26,7 +29,7 @@ dependencies {
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-	implementation("org.springframework.boot:spring-boot-starter-data-rest")
+	// implementation("org.springframework.boot:spring-boot-starter-data-rest")
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
 
@@ -38,4 +41,8 @@ dependencies {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-parameters")
 }
