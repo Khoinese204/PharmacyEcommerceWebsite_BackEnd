@@ -22,17 +22,20 @@ public class CartController {
         cartService.addToCart(userId, request);
     }
 
-    @PutMapping("/item/{itemId}")
-    public void updateCartItem(@PathVariable(name = "itemId") Integer itemId,
+    @PutMapping("/{userId}/item/{itemId}")
+    public void updateCartItem(@PathVariable(name = "userId") Integer userId,
+            @PathVariable(name = "itemId") Integer itemId,
             @RequestBody UpdateCartItemRequest request) {
-        cartService.updateCartItem(itemId, request);
+        cartService.updateCartItem(userId, itemId, request);
     }
 
-    @DeleteMapping("/item/{itemId}")
-    public void removeItem(@PathVariable(name = "itemId") Integer itemId) {
-        cartService.removeCartItem(itemId);
+    @DeleteMapping("/{userId}/item/{itemId}")
+    public void removeItem(@PathVariable(name = "userId") Integer userId,
+            @PathVariable(name = "itemId") Integer itemId) {
+        cartService.removeCartItem(userId, itemId);
     }
 
+    // Xóa tất cả sản phẩm trong giỏ hàng của người dùng
     @DeleteMapping("/{userId}/clear")
     public void clearCart(@PathVariable(name = "userId") Integer userId) {
         cartService.clearCart(userId);

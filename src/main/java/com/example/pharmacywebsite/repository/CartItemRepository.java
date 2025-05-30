@@ -3,6 +3,9 @@ package com.example.pharmacywebsite.repository;
 import com.example.pharmacywebsite.domain.CartItem;
 import com.example.pharmacywebsite.domain.Cart;
 import com.example.pharmacywebsite.domain.Medicine;
+
+import jakarta.transaction.Transactional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -19,6 +22,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
     // Lấy theo cart + medicine (nếu dùng kiểu đối tượng)
     Optional<CartItem> findByCartAndMedicine(Cart cart, Medicine medicine);
 
+    @Transactional
     // Xóa tất cả cart item trong một cart
     void deleteByCartId(Integer cartId);
 

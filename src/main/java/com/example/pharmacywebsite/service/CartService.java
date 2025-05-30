@@ -57,6 +57,9 @@ public class CartService {
 
     @Transactional
     public void addToCart(Integer userId, AddToCartRequest req) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+
         Cart cart = cartRepo.findByUserId(userId).orElseGet(() -> {
             Cart c = new Cart();
             c.setUser(userRepo.findById(userId).orElseThrow());
@@ -80,18 +83,56 @@ public class CartService {
         cartRepo.save(cart);
     }
 
-    public void updateCartItem(Integer itemId, UpdateCartItemRequest req) {
-        CartItem item = cartItemRepo.findById(itemId).orElseThrow();
+    public void updateCartItem(Integer userId, Integer itemId, UpdateCartItemRequest req) {
+        // Bước 1: Kiểm tra người dùng
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+
+        // Bước 2: Tìm CartItem
+        CartItem item = cartItemRepo.findById(itemId)
+                .orElseThrow(() -> new ApiException("Cart item not found", HttpStatus.NOT_FOUND));
+
+        // Bước 4: Cập nhật số lượng
         item.setQuantity(req.getQuantity());
         cartItemRepo.save(item);
+
+        // Bước 5: Cập nhật thời gian sửa giỏ hàng
+        Cart cart = item.getCart();
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepo.save(cart);
     }
 
-    public void removeCartItem(Integer itemId) {
+    public void removeCartItem(Integer userId, Integer itemId) {
+        // Kiểm tra user tồn tại
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+
+        // Tìm cart item
+        CartItem item = cartItemRepo.findById(itemId)
+                .orElseThrow(() -> new ApiException("Cart item not found", HttpStatus.NOT_FOUND));
+        // Xóa cart item
         cartItemRepo.deleteById(itemId);
+
+        // Cập nhật lại thời gian của cart
+        Cart cart = item.getCart();
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepo.save(cart);
     }
 
     public void clearCart(Integer userId) {
-        Cart cart = cartRepo.findByUserId(userId).orElseThrow();
+        // Kiểm tra user
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+
+        // Tìm giỏ hàng
+        Cart cart = cartRepo.findByUserId(userId)
+                .orElseThrow(() -> new ApiException("Cart not found", HttpStatus.NOT_FOUND));
+
+        // Xóa toàn bộ items trong cart
         cartItemRepo.deleteByCartId(cart.getId());
+
+        // Cập nhật lại thời gian
+        cart.setUpdatedAt(LocalDateTime.now());
+        cartRepo.save(cart);
     }
 }
