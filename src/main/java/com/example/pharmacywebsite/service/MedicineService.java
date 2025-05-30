@@ -2,6 +2,8 @@ package com.example.pharmacywebsite.service;
 
 import com.example.pharmacywebsite.domain.Category;
 import com.example.pharmacywebsite.domain.Medicine;
+import com.example.pharmacywebsite.domain.MedicineDetail;
+import com.example.pharmacywebsite.dto.MedicineDetailDto;
 import com.example.pharmacywebsite.dto.MedicineDto;
 import com.example.pharmacywebsite.repository.CategoryRepository;
 import com.example.pharmacywebsite.repository.MedicineRepository;
@@ -9,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class MedicineService {
@@ -39,6 +40,18 @@ public class MedicineService {
         Category category = categoryRepo.findById(dto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
         med.setCategory(category);
+
+        if (dto.getDetails() != null) {
+            List<MedicineDetail> details = dto.getDetails().stream().map(d -> {
+                MedicineDetail detail = new MedicineDetail();
+                detail.setType(d.getType());
+                detail.setContent(d.getContent());
+                detail.setMedicine(med);
+                return detail;
+            }).toList();
+            med.setDetails(details);
+        }
+
         return toDto(medicineRepo.save(med));
     }
 
@@ -46,20 +59,41 @@ public class MedicineService {
         Medicine med = medicineRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Medicine not found"));
 
-        med.setName(dto.getName());
-        med.setPrice(dto.getPrice());
-        med.setOriginalPrice(dto.getOriginalPrice());
-        med.setUnit(dto.getUnit());
-        med.setShortDescription(dto.getShortDescription());
-        med.setBrandOrigin(dto.getBrandOrigin());
-        med.setManufacturer(dto.getManufacturer());
-        med.setCountryOfManufacture(dto.getCountryOfManufacture());
-        med.setImageUrl(dto.getImageUrl());
+        if (dto.getName() != null)
+            med.setName(dto.getName());
+        if (dto.getPrice() != null)
+            med.setPrice(dto.getPrice());
+        if (dto.getOriginalPrice() != null)
+            med.setOriginalPrice(dto.getOriginalPrice());
+        if (dto.getUnit() != null)
+            med.setUnit(dto.getUnit());
+        if (dto.getShortDescription() != null)
+            med.setShortDescription(dto.getShortDescription());
+        if (dto.getBrandOrigin() != null)
+            med.setBrandOrigin(dto.getBrandOrigin());
+        if (dto.getManufacturer() != null)
+            med.setManufacturer(dto.getManufacturer());
+        if (dto.getCountryOfManufacture() != null)
+            med.setCountryOfManufacture(dto.getCountryOfManufacture());
+        if (dto.getImageUrl() != null)
+            med.setImageUrl(dto.getImageUrl());
 
         if (dto.getCategoryId() != null) {
             Category category = categoryRepo.findById(dto.getCategoryId())
                     .orElseThrow(() -> new RuntimeException("Category not found"));
             med.setCategory(category);
+        }
+
+        if (dto.getDetails() != null) {
+            med.getDetails().clear();
+            List<MedicineDetail> details = dto.getDetails().stream().map(d -> {
+                MedicineDetail detail = new MedicineDetail();
+                detail.setType(d.getType());
+                detail.setContent(d.getContent());
+                detail.setMedicine(med);
+                return detail;
+            }).toList();
+            med.getDetails().addAll(details);
         }
 
         return toDto(medicineRepo.save(med));
@@ -72,7 +106,6 @@ public class MedicineService {
         medicineRepo.deleteById(id);
     }
 
-    // Mapping functions
     private MedicineDto toDto(Medicine m) {
         MedicineDto dto = new MedicineDto();
         dto.setId(m.getId());
@@ -86,6 +119,17 @@ public class MedicineService {
         dto.setCountryOfManufacture(m.getCountryOfManufacture());
         dto.setImageUrl(m.getImageUrl());
         dto.setCategoryId(m.getCategory() != null ? m.getCategory().getId() : null);
+
+        if (m.getDetails() != null) {
+            List<MedicineDetailDto> detailDtos = m.getDetails().stream().map(d -> {
+                MedicineDetailDto dDto = new MedicineDetailDto();
+                dDto.setType(d.getType());
+                dDto.setContent(d.getContent());
+                return dDto;
+            }).toList();
+            dto.setDetails(detailDtos);
+        }
+
         return dto;
     }
 

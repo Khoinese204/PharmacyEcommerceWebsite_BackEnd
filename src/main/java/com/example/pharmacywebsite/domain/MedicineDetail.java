@@ -21,5 +21,6 @@ public class MedicineDetail {
     @Enumerated(EnumType.STRING)
     private MedicineDetailType type;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 }

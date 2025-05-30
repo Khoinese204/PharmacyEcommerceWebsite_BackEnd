@@ -1,5 +1,7 @@
 package com.example.pharmacywebsite.domain;
 
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,4 +28,8 @@ public class Medicine {
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
+
+    @OneToMany(mappedBy = "medicine", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MedicineDetail> details;
+
 }

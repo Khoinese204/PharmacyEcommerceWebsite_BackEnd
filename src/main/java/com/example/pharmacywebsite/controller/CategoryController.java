@@ -1,8 +1,7 @@
 package com.example.pharmacywebsite.controller;
 
 import com.example.pharmacywebsite.dto.CategoryDto;
-import com.example.pharmacywebsite.domain.Category;
-import com.example.pharmacywebsite.repository.CategoryRepository;
+import com.example.pharmacywebsite.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,32 +12,31 @@ import java.util.List;
 public class CategoryController {
 
     @Autowired
-    private CategoryRepository categoryRepo;
+    private CategoryService categoryService;
 
     @GetMapping
     public List<CategoryDto> getAll(@RequestParam(name = "name", required = false) String search) {
-        return categoryRepo.findAll().stream()
-                .filter(c -> search == null || c.getName().toLowerCase().contains(search.toLowerCase()))
-                .map(c -> new CategoryDto(c.getId(), c.getName()))
-                .toList();
+        return categoryService.getAll(search);
+    }
+
+    @GetMapping("/{id}")
+    public CategoryDto getById(@PathVariable Integer id) {
+        return categoryService.getById(id);
     }
 
     @PostMapping
-    public Category create(@RequestBody CategoryDto dto) {
-        Category c = new Category();
-        c.setName(dto.getName());
-        return categoryRepo.save(c);
+    public CategoryDto create(@RequestBody CategoryDto dto) {
+        return categoryService.create(dto);
     }
 
     @PutMapping("/{id}")
-    public Category update(@PathVariable Integer id, @RequestBody CategoryDto dto) {
-        Category c = categoryRepo.findById(id).orElseThrow();
-        c.setName(dto.getName());
-        return categoryRepo.save(c);
+    public CategoryDto update(@PathVariable Integer id, @RequestBody CategoryDto dto) {
+        return categoryService.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Integer id) {
-        categoryRepo.deleteById(id);
+    public String delete(@PathVariable Integer id) {
+        categoryService.delete(id);
+        return "Category deleted successfully";
     }
 }

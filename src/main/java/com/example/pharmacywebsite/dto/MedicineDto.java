@@ -1,5 +1,7 @@
 package com.example.pharmacywebsite.dto;
 
+import java.util.List;
+
 import lombok.Data;
 
 @Data
@@ -15,4 +17,6 @@ public class MedicineDto {
     private String countryOfManufacture;
     private String imageUrl;
     private Integer categoryId;
+
+    private List<MedicineDetailDto> details; // thêm dòng này
 }

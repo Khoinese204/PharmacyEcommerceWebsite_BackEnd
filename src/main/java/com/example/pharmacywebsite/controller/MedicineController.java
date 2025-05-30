@@ -3,9 +3,11 @@ package com.example.pharmacywebsite.controller;
 import com.example.pharmacywebsite.dto.MedicineDto;
 import com.example.pharmacywebsite.service.MedicineService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/medicines")
@@ -35,7 +37,8 @@ public class MedicineController {
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable(name = "id") Integer id) {
+    public ResponseEntity<?> delete(@PathVariable(name = "id") Integer id) {
         medicineService.delete(id);
+        return ResponseEntity.ok(Map.of("message", "Medicine deleted successfully"));
     }
 }
