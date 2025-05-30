@@ -2,9 +2,11 @@ package com.example.pharmacywebsite.service;
 
 import com.example.pharmacywebsite.domain.*;
 import com.example.pharmacywebsite.dto.*;
+import com.example.pharmacywebsite.exception.ApiException;
 import com.example.pharmacywebsite.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -24,6 +26,9 @@ public class CartService {
     private UserRepository userRepo;
 
     public CartDto getCartByUserId(Integer userId) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
+
         Cart cart = cartRepo.findByUserId(userId).orElseGet(() -> {
             Cart newCart = new Cart();
             newCart.setUser(userRepo.findById(userId).orElseThrow());

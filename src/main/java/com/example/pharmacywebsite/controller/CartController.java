@@ -13,27 +13,28 @@ public class CartController {
     private CartService cartService;
 
     @GetMapping("/{userId}")
-    public CartDto getCart(@PathVariable Integer userId) {
+    public CartDto getCart(@PathVariable(name = "userId") Integer userId) {
         return cartService.getCartByUserId(userId);
     }
 
     @PostMapping("/{userId}/add")
-    public void addToCart(@PathVariable Integer userId, @RequestBody AddToCartRequest request) {
+    public void addToCart(@PathVariable(name = "userId") Integer userId, @RequestBody AddToCartRequest request) {
         cartService.addToCart(userId, request);
     }
 
     @PutMapping("/item/{itemId}")
-    public void updateCartItem(@PathVariable Integer itemId, @RequestBody UpdateCartItemRequest request) {
+    public void updateCartItem(@PathVariable(name = "itemId") Integer itemId,
+            @RequestBody UpdateCartItemRequest request) {
         cartService.updateCartItem(itemId, request);
     }
 
     @DeleteMapping("/item/{itemId}")
-    public void removeItem(@PathVariable Integer itemId) {
+    public void removeItem(@PathVariable(name = "itemId") Integer itemId) {
         cartService.removeCartItem(itemId);
     }
 
     @DeleteMapping("/{userId}/clear")
-    public void clearCart(@PathVariable Integer userId) {
+    public void clearCart(@PathVariable(name = "userId") Integer userId) {
         cartService.clearCart(userId);
     }
 }

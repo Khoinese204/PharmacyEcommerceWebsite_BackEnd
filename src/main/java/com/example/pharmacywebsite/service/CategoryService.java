@@ -2,9 +2,11 @@ package com.example.pharmacywebsite.service;
 
 import com.example.pharmacywebsite.domain.Category;
 import com.example.pharmacywebsite.dto.CategoryDto;
+import com.example.pharmacywebsite.exception.ApiException;
 import com.example.pharmacywebsite.repository.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,7 +26,7 @@ public class CategoryService {
 
     public CategoryDto getById(Integer id) {
         Category c = categoryRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + id));
+                .orElseThrow(() -> new ApiException("Category not found with ID: " + id, HttpStatus.NOT_FOUND));
         return toDto(c);
     }
 
@@ -36,14 +38,14 @@ public class CategoryService {
 
     public CategoryDto update(Integer id, CategoryDto dto) {
         Category c = categoryRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Category not found with ID: " + id));
+                .orElseThrow(() -> new ApiException("Category not found with ID: " + id, HttpStatus.NOT_FOUND));
         c.setName(dto.getName());
         return toDto(categoryRepo.save(c));
     }
 
     public void delete(Integer id) {
         if (!categoryRepo.existsById(id)) {
-            throw new EntityNotFoundException("Category not found with ID: " + id);
+            throw new ApiException("Category not found with ID: " + id, HttpStatus.NOT_FOUND);
         }
         categoryRepo.deleteById(id);
     }

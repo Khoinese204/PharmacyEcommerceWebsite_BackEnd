@@ -5,9 +5,11 @@ import com.example.pharmacywebsite.domain.Medicine;
 import com.example.pharmacywebsite.domain.MedicineDetail;
 import com.example.pharmacywebsite.dto.MedicineDetailDto;
 import com.example.pharmacywebsite.dto.MedicineDto;
+import com.example.pharmacywebsite.exception.ApiException;
 import com.example.pharmacywebsite.repository.CategoryRepository;
 import com.example.pharmacywebsite.repository.MedicineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,14 +33,14 @@ public class MedicineService {
 
     public MedicineDto getById(Integer id) {
         Medicine med = medicineRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medicine not found"));
+                .orElseThrow(() -> new ApiException("Medicine not found", HttpStatus.NOT_FOUND));
         return toDto(med);
     }
 
     public MedicineDto create(MedicineDto dto) {
         Medicine med = toEntity(dto);
         Category category = categoryRepo.findById(dto.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new ApiException("Category not found", HttpStatus.NOT_FOUND));
         med.setCategory(category);
 
         if (dto.getDetails() != null) {
@@ -57,7 +59,7 @@ public class MedicineService {
 
     public MedicineDto update(Integer id, MedicineDto dto) {
         Medicine med = medicineRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Medicine not found"));
+                .orElseThrow(() -> new ApiException("Medicine not found", HttpStatus.NOT_FOUND));
 
         if (dto.getName() != null)
             med.setName(dto.getName());
@@ -80,7 +82,7 @@ public class MedicineService {
 
         if (dto.getCategoryId() != null) {
             Category category = categoryRepo.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
+                    .orElseThrow(() -> new ApiException("Category not found", HttpStatus.NOT_FOUND));
             med.setCategory(category);
         }
 
@@ -101,7 +103,7 @@ public class MedicineService {
 
     public void delete(Integer id) {
         if (!medicineRepo.existsById(id)) {
-            throw new RuntimeException("Medicine not found");
+            throw new ApiException("Medicine not found", HttpStatus.NOT_FOUND);
         }
         medicineRepo.deleteById(id);
     }
