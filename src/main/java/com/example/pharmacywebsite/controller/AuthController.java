@@ -1,7 +1,10 @@
 package com.example.pharmacywebsite.controller;
 
+import com.example.pharmacywebsite.domain.User;
 import com.example.pharmacywebsite.dto.*;
 import com.example.pharmacywebsite.service.AuthService;
+import com.example.pharmacywebsite.service.JwtService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest req) {
@@ -50,6 +54,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request) {
+        User user = jwtService.extractUserFromRequest(request);
         return ResponseEntity.ok(Map.of("message", "Logout success"));
     }
 
