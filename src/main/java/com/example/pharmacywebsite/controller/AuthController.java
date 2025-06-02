@@ -48,4 +48,9 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        return ResponseEntity.ok(Map.of("message", "Logout success"));
+    }
+
 }
