@@ -28,6 +28,9 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/payments/initiate").permitAll()
+                .requestMatchers("/api/payments/confirm").permitAll()
+                .requestMatchers("/api/payments/history").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
