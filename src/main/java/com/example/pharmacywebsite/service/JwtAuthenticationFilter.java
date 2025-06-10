@@ -23,6 +23,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        String path = request.getRequestURI();
+        if (path.startsWith("/api/auth")) {
+            chain.doFilter(request, response); // Bỏ qua xác thực cho endpoint /api/auth/**
+            return;
+        }
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             chain.doFilter(request, response);

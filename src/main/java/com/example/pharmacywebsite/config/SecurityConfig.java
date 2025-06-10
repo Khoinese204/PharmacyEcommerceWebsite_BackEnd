@@ -28,9 +28,11 @@ public class SecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/payments/initiate").permitAll()
-                .requestMatchers("/api/payments/confirm").permitAll()
-                .requestMatchers("/api/payments/history").permitAll()
+                .requestMatchers("/api/cart/**").permitAll()
+                .requestMatchers("/api/categories/**").permitAll()
+                .requestMatchers("/api/medicines/**").permitAll()
+                .requestMatchers("/api/orders/**").permitAll()
+                .requestMatchers("/api/payments/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
