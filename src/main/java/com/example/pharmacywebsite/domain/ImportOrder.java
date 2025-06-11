@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "import_orders")
@@ -21,4 +22,7 @@ public class ImportOrder {
 
     private LocalDateTime createdAt;
     private Double totalPrice;
+
+    @OneToMany(mappedBy = "importOrder", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImportOrderItem> importOrderItems;
 }
