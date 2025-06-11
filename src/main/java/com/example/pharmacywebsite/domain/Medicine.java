@@ -15,14 +15,27 @@ public class Medicine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(columnDefinition = "TEXT") // Tên thuốc có thể dài hơn 255 kí tự
     private String name;
+
     private Double price;
     private Double originalPrice;
     private String unit;
+
+    @Column(columnDefinition = "TEXT")
     private String shortDescription;
+
+
+    
+    @Column(columnDefinition = "TEXT")
     private String brandOrigin;
+
+    @Column(columnDefinition = "TEXT")
     private String manufacturer;
+
+    @Column(columnDefinition = "TEXT")
     private String countryOfManufacture;
+
     private String imageUrl;
 
     @ManyToOne
@@ -31,5 +44,4 @@ public class Medicine {
 
     @OneToMany(mappedBy = "medicine", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MedicineDetail> details;
-
 }
