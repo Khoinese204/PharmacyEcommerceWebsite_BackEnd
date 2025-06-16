@@ -8,7 +8,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
-@Order(1) // Chạy trước MedicineSeeder
+@Order(3) // Chạy trước MedicineSeeder
 @RequiredArgsConstructor
 public class CategorySeeder implements CommandLineRunner {
 

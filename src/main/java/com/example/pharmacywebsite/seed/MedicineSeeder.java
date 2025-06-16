@@ -18,7 +18,7 @@ import com.example.pharmacywebsite.repository.MedicineRepository;
 import lombok.RequiredArgsConstructor;
 
 @Component
-@Order(2) // chạy sau CategorySeeder
+@Order(4) // chạy sau CategorySeeder
 @RequiredArgsConstructor
 public class MedicineSeeder implements CommandLineRunner {
 
