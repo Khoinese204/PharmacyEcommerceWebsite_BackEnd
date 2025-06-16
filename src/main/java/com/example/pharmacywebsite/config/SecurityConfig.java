@@ -33,6 +33,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/medicines/**").permitAll()
                 .requestMatchers("/api/orders/**").permitAll()
                 .requestMatchers("/api/payments/**").permitAll()
+                .requestMatchers("/api/shipments/**").permitAll()
+                .requestMatchers("/api/suppliers/**").permitAll()
+                .requestMatchers("/api/import-orders/**").permitAll()
+                .requestMatchers("/api/orders/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
