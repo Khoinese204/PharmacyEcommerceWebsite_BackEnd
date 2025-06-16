@@ -90,6 +90,12 @@ public class OrderService {
         return toDto(order);
     }
 
+    public List<OrderDto> getAllOrders() {
+        return orderRepo.findAll().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
     public List<OrderDto> getOrdersByUser(Integer userId) {
         return orderRepo.findByUserId(userId).stream()
                 .map(this::toDto)
@@ -100,6 +106,26 @@ public class OrderService {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new ApiException("Order not found", HttpStatus.NOT_FOUND));
         return toDto(order);
+    }
+
+    public List<OrderItemDto> getOrderItems(Integer orderId) {
+        System.out.println("Fetching orderId: " + orderId);
+        Order order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ApiException("Order not found", HttpStatus.NOT_FOUND));
+
+        List<OrderItem> items = orderItemRepo.findByOrderId(orderId);
+        System.out.println("Found items: " + items.size());
+
+        return items.stream().map(item -> {
+            OrderItemDto dto = new OrderItemDto();
+            if (item.getMedicine() == null) {
+                throw new RuntimeException("Thuốc trong đơn hàng bị null: orderItemId = " + item.getId());
+            }
+            dto.setMedicineName(item.getMedicine().getName());
+            dto.setQuantity(item.getQuantity());
+            dto.setUnitPrice(item.getUnitPrice());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     @Transactional
@@ -140,9 +166,11 @@ public class OrderService {
     private OrderDto toDto(Order order) {
         OrderDto dto = new OrderDto();
         dto.setOrderId(order.getId());
+        dto.setCustomer(order.getUser().getFullName());
         dto.setOrderDate(order.getOrderDate());
         dto.setStatus(order.getStatus());
         dto.setTotalPrice(order.getTotalPrice());
         return dto;
     }
+
 }

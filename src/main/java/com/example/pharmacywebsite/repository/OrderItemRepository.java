@@ -9,4 +9,6 @@ import com.example.pharmacywebsite.domain.OrderItem;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
     List<OrderItem> findByOrder(Order order);
+
+    List<OrderItem> findByOrderId(Integer orderId);
 }

@@ -36,6 +36,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/shipments/**").permitAll()
                 .requestMatchers("/api/suppliers/**").permitAll()
                 .requestMatchers("/api/import-orders/**").permitAll()
+                .requestMatchers("/api/orders/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
