@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.example.pharmacywebsite.designpattern.FactoryMethod.PaymentFactory;
+import com.example.pharmacywebsite.designpattern.FactoryMethod.PaymentFactoryProvider;
 import com.example.pharmacywebsite.domain.Order;
 import com.example.pharmacywebsite.domain.PaymentTransaction;
 import com.example.pharmacywebsite.dto.PaymentConfirmRequest;
@@ -24,18 +26,15 @@ public class PaymentService {
 
     private final PaymentTransactionRepository paymentRepo;
     private final OrderRepository orderRepo;
+    private final PaymentFactoryProvider factoryProvider;
 
     public PaymentTransaction initiatePayment(PaymentInitiateRequest request) {
         Order order = orderRepo.findById(request.getOrderId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Không tìm thấy đơn hàng với ID: " + request.getOrderId()));
 
-        PaymentTransaction transaction = new PaymentTransaction();
-        transaction.setOrder(order);
-        transaction.setAmount(request.getAmount());
-        transaction.setPaymentMethod(request.getPaymentMethod());
-        transaction.setStatus(PaymentStatus.PENDING);
-        transaction.setCreatedAt(LocalDateTime.now());
+        PaymentFactory factory = factoryProvider.getFactory(request.getPaymentMethod());
+        PaymentTransaction transaction = factory.createTransaction(order, request.getAmount());
 
         return paymentRepo.save(transaction);
     }
