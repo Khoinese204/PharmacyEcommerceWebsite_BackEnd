@@ -1,5 +1,11 @@
 package com.example.pharmacywebsite.service;
 
+import com.example.pharmacywebsite.designpattern.CoR.InventoryCheckHandler;
+import com.example.pharmacywebsite.designpattern.CoR.OrderContext;
+import com.example.pharmacywebsite.designpattern.CoR.OrderCreationHandler;
+import com.example.pharmacywebsite.designpattern.CoR.OrderLogHandler;
+import com.example.pharmacywebsite.designpattern.CoR.PaymentVerificationHandler;
+import com.example.pharmacywebsite.designpattern.CoR.PromotionApplyHandler;
 import com.example.pharmacywebsite.domain.*;
 import com.example.pharmacywebsite.dto.*;
 import com.example.pharmacywebsite.enums.OrderStatus;
@@ -33,39 +39,34 @@ public class OrderService {
     private OrderShippingInfoRepository orderShippingInfoRepo;
     @Autowired
     private OrderStatusLogRepository orderStatusLogRepo;
+    @Autowired
+    private InventoryCheckHandler inventoryHandler;
+    @Autowired
+    private PromotionApplyHandler promotionHandler;
+    @Autowired
+    private PaymentVerificationHandler paymentHandler;
+    @Autowired
+    private OrderCreationHandler orderCreationHandler;
+    @Autowired
+    private OrderLogHandler orderLogHandler;
 
     @Transactional
     public OrderDto createOrder(CreateOrderDTO dto) {
         User user = userRepo.findById(dto.getUserId())
                 .orElseThrow(() -> new ApiException("User not found", HttpStatus.NOT_FOUND));
 
+        CartDto cart = cartService.getCartByUserId(dto.getUserId());
+
+        // Tạo Order chưa có item
         Order order = new Order();
         order.setUser(user);
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus(OrderStatus.CONFIRMED);
+        order.setStatus(OrderStatus.PENDING); // hoặc PENDING nếu cần duyệt
         order.setPaymentMethod(dto.getPaymentMethod());
-        order.setTotalPrice(0.0);
+        order.setTotalPrice(0.0); // sẽ cập nhật trong handler
         order = orderRepo.save(order);
 
-        CartDto cart = cartService.getCartByUserId(dto.getUserId());
-
-        double total = 0.0;
-        for (CartItemDto item : cart.getItems()) {
-            Medicine medicine = medicineRepo.findById(item.getMedicineId())
-                    .orElseThrow(() -> new ApiException("Medicine not found", HttpStatus.NOT_FOUND));
-
-            OrderItem oi = new OrderItem();
-            oi.setOrder(order);
-            oi.setMedicine(medicine);
-            oi.setQuantity(item.getQuantity());
-            oi.setUnitPrice(medicine.getPrice());
-            total += item.getQuantity() * medicine.getPrice();
-            orderItemRepo.save(oi);
-        }
-
-        order.setTotalPrice(total);
-        orderRepo.save(order);
-
+        // Thiết lập shipping info
         OrderShippingInfo info = new OrderShippingInfo();
         info.setOrder(order);
         info.setRecipientName(dto.getRecipientName());
@@ -78,13 +79,24 @@ public class OrderService {
         info.setRequiresInvoice(dto.getRequiresInvoice());
         orderShippingInfoRepo.save(info);
 
-        OrderStatusLog log = new OrderStatusLog();
-        log.setOrder(order);
-        log.setStatus(OrderStatus.CONFIRMED);
-        log.setUpdatedAt(LocalDateTime.now());
-        log.setUpdatedBy(user); // giả định tạo đơn là người cập nhật
-        orderStatusLogRepo.save(log);
+        // Tạo context
+        OrderContext context = new OrderContext();
+        context.setOrder(order);
+        context.setUser(user);
+        context.setCart(cart);
+        context.setDto(dto);
 
+        // Nối chuỗi handler
+        inventoryHandler
+                .setNext(promotionHandler)
+                .setNext(paymentHandler)
+                .setNext(orderCreationHandler)
+                .setNext(orderLogHandler);
+
+        // Bắt đầu xử lý
+        inventoryHandler.handle(context);
+
+        // Sau khi xử lý xong → clear giỏ hàng
         cartService.clearCart(dto.getUserId());
 
         return toDto(order);
