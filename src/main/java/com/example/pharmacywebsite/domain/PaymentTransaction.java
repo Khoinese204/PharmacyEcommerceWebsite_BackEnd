@@ -27,7 +27,7 @@ public class PaymentTransaction {
     private String providerTransactionId;
     private Double amount;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // mặc định là success vì khi ấn nút đã chuyển khoản thì success luôn
     private PaymentStatus status;
 
     private LocalDateTime paidAt;

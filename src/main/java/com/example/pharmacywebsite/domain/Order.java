@@ -24,7 +24,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    private OrderStatus status; // Mặc định là PENDING
 
     private Double totalPrice;
 
