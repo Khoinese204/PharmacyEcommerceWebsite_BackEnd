@@ -5,6 +5,7 @@ import com.example.pharmacywebsite.designpattern.CoR.OrderContext;
 import com.example.pharmacywebsite.designpattern.CoR.OrderCreationHandler;
 import com.example.pharmacywebsite.designpattern.CoR.OrderLogHandler;
 import com.example.pharmacywebsite.designpattern.CoR.PaymentVerificationHandler;
+import com.example.pharmacywebsite.designpattern.CoR.PriceCalculationHandler;
 import com.example.pharmacywebsite.designpattern.CoR.PromotionApplyHandler;
 import com.example.pharmacywebsite.domain.*;
 import com.example.pharmacywebsite.dto.*;
@@ -49,6 +50,8 @@ public class OrderService {
     private OrderCreationHandler orderCreationHandler;
     @Autowired
     private OrderLogHandler orderLogHandler;
+    @Autowired
+    private PriceCalculationHandler priceCalculationHandler;
 
     @Transactional
     public OrderDto createOrder(CreateOrderDTO dto) {
@@ -89,6 +92,7 @@ public class OrderService {
         // Nối chuỗi handler
         inventoryHandler
                 .setNext(promotionHandler)
+                .setNext(priceCalculationHandler)
                 .setNext(paymentHandler)
                 .setNext(orderCreationHandler)
                 .setNext(orderLogHandler);
