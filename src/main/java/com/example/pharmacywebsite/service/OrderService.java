@@ -4,6 +4,7 @@ package com.example.pharmacywebsite.service;
 import com.example.pharmacywebsite.designpattern.FactoryMethod.BankTransferPaymentFactory;
 import com.example.pharmacywebsite.designpattern.FactoryMethod.CodPaymentFactory;
 import com.example.pharmacywebsite.designpattern.FactoryMethod.PaymentFactory;
+import com.example.pharmacywebsite.designpattern.State.OrderContext;
 import com.example.pharmacywebsite.domain.*;
 import com.example.pharmacywebsite.dto.CreateOrderRequest;
 
@@ -34,6 +35,8 @@ public class OrderService {
     private MedicineRepository medicineRepository;
     @Autowired
     private OrderShippingInfoRepository orderShippingInfoRepository;
+    @Autowired
+    private OrderStatusLogRepository orderStatusLogRepository;
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
@@ -89,6 +92,28 @@ public class OrderService {
         paymentTransactionRepository.save(transaction);
 
         return order;
+    }
+
+    @Transactional
+    public void moveOrderToNextStatus(Integer orderId, Integer userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        OrderContext context = new OrderContext(order, user, orderRepository, orderStatusLogRepository);
+        context.next();
+    }
+
+    @Transactional
+    public void cancelOrder(Integer orderId, Integer userId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User không tồn tại"));
+
+        OrderContext context = new OrderContext(order, user, orderRepository, orderStatusLogRepository);
+        context.cancel();
     }
 
 }

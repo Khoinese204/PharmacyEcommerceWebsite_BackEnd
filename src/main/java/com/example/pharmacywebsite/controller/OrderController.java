@@ -30,4 +30,19 @@ public class OrderController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{orderId}/next")
+    public ResponseEntity<?> moveToNext(@PathVariable Integer orderId,
+            @RequestParam Integer userId) {
+        orderService.moveOrderToNextStatus(orderId, userId);
+        return ResponseEntity.ok("Trạng thái đơn hàng đã được cập nhật");
+    }
+
+    // 👉 Huỷ đơn hàng
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(@PathVariable Integer orderId,
+            @RequestParam Integer userId) {
+        orderService.cancelOrder(orderId, userId);
+        return ResponseEntity.ok("Đơn hàng đã bị huỷ");
+    }
 }
