@@ -41,4 +41,6 @@ public class MedicineController {
         medicineService.delete(id);
         return ResponseEntity.ok(Map.of("message", "Medicine deleted successfully"));
     }
+
+    
 }

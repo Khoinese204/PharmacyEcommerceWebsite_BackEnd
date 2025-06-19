@@ -2,6 +2,7 @@ package com.example.pharmacywebsite.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,20 +26,13 @@ public class ShipmentService {
     private final ShipmentRepository shipmentRepo;
     private final OrderRepository orderRepo;
 
-    public ShipmentResponse createShipment(ShipmentCreateRequest request) {
-        Order order = orderRepo.findById(request.getOrderId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
-
+    public void createShipmentForOrder(Order order) {
         Shipment shipment = new Shipment();
         shipment.setOrder(order);
-        shipment.setShipmentCode(request.getShipmentCode());
-        shipment.setShippedBy(request.getShippedBy());
+        shipment.setShipmentCode("SP-" + UUID.randomUUID());
         shipment.setStatus(ShipmentStatus.WAITING);
-        shipment.setShippedAt(LocalDateTime.now());
 
-        shipment = shipmentRepo.save(shipment);
-
-        return toResponse(shipment);
+        shipmentRepo.save(shipment);
     }
 
     public List<ShipmentResponse> getAllShipments() {
