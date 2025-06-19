@@ -1,16 +1,14 @@
 package com.example.pharmacywebsite.designpattern.Decorator;
 
-import com.example.pharmacywebsite.domain.Medicine;
+public class BasePriceCalculator implements PriceCalculator {
+    private final double basePrice;
 
-public class BasePriceCalculator implements MedicinePriceCalculator {
-    private final Medicine medicine;
-
-    public BasePriceCalculator(Medicine medicine) {
-        this.medicine = medicine;
+    public BasePriceCalculator(double basePrice) {
+        this.basePrice = basePrice;
     }
 
     @Override
     public double calculate() {
-        return medicine.getPrice();
+        return basePrice;
     }
 }
