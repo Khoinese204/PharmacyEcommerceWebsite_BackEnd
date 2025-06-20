@@ -17,7 +17,7 @@ import com.example.pharmacywebsite.service.ImportOrderService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/import-orders")
+@RequestMapping("/api/import")
 @RequiredArgsConstructor
 public class ImportOrderController {
     private final ImportOrderService importOrderService;

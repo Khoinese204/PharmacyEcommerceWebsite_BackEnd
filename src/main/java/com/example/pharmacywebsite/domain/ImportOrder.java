@@ -7,6 +7,8 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.example.pharmacywebsite.enums.ImportOrderStatus;
+
 @Entity
 @Table(name = "import_orders")
 @Getter

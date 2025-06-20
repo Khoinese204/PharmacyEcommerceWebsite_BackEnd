@@ -1,6 +1,8 @@
 package com.example.pharmacywebsite.service;
 
 import com.example.pharmacywebsite.domain.*;
+import com.example.pharmacywebsite.dto.ImportOrderSummaryDto;
+import com.example.pharmacywebsite.dto.InventoryDto;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -115,4 +118,31 @@ public class WarehouseService {
             warehouseDeliveryLogRepository.save(deliveryLog);
         }
     }
+
+    public List<InventoryDto> getInventoryList() {
+        return inventoryRepository.findAll().stream().map(inventory -> {
+            InventoryDto dto = new InventoryDto();
+            dto.setBatchNumber("LOT" + String.format("%03d", inventory.getId()));
+            dto.setProductName(inventory.getMedicine().getName());
+            dto.setQuantity(inventory.getQuantity());
+            dto.setExpiryDate(inventory.getExpiredAt().toString());
+            dto.setStatus(inventory.getStatus().name()); // hoặc .name() nếu không có displayName
+            return dto;
+        }).toList();
+    }
+
+    public List<ImportOrderSummaryDto> getAllImportOrders() {
+        List<ImportOrder> orders = importOrderRepository.findAll();
+
+        return orders.stream().map(order -> {
+            ImportOrderSummaryDto dto = new ImportOrderSummaryDto();
+            dto.setId(order.getId());
+            dto.setSupplierName(order.getSupplier().getName());
+            dto.setTotalPrice(order.getTotalPrice());
+            dto.setCreatedAt(order.getCreatedAt());
+            dto.setStatus(order.getStatus()); // nếu dùng enum
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
 }

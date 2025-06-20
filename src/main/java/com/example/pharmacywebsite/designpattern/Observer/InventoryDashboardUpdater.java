@@ -14,6 +14,5 @@ public class InventoryDashboardUpdater implements InventoryObserver {
     public void update(Inventory inventory) {
         logger.info("[Dashboard] Cập nhật dữ liệu tồn kho dashboard cho thuốc '{}'.",
                 inventory.getMedicine().getName());
-        // TODO: Gọi cập nhật thống kê nếu cần
     }
 }

@@ -14,7 +14,6 @@ public class AutoRestockObserver implements InventoryObserver {
     public void update(Inventory inventory) {
         if (inventory.getQuantity() == 0) {
             logger.info("[Tự động đặt hàng] Thuốc '{}' đã hết. Cần nhập kho thêm.", inventory.getMedicine().getName());
-            // TODO: Gọi service đặt hàng nếu cần
         }
     }
 }

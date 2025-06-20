@@ -24,20 +24,15 @@ public class OrderPlacementFacade {
 
     @Transactional
     public OrderResponseDto placeOrder(CreateOrderRequest request) {
-        // 1. Create order with items, shipping, and payment (via Factory Method)
         Order order = orderService.createOrder(request);
 
-        // 2. Deduct inventory (get items from repository)
         List<OrderItem> items = orderItemRepository.findByOrder(order);
         inventoryService.deductStock(items);
 
-        // 3. Log order status
         orderStatusLogService.logInitialStatus(order);
 
-        // 4. Create shipment
         shipmentService.createShipmentForOrder(order);
 
-        // 5. Return response
         return new OrderResponseDto(order.getId(), order.getTotalPrice(), order.getStatus());
     }
 }

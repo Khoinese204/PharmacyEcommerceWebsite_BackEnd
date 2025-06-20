@@ -2,6 +2,7 @@ package com.example.pharmacywebsite.service;
 
 import com.example.pharmacywebsite.domain.Supplier;
 import com.example.pharmacywebsite.dto.SupplierRequest;
+import com.example.pharmacywebsite.dto.SupplierResponse;
 import com.example.pharmacywebsite.repository.SupplierRepository;
 import org.springframework.stereotype.Service;
 
@@ -15,8 +16,16 @@ public class SupplierService {
         this.supplierRepository = supplierRepository;
     }
 
-    public List<Supplier> getAllSuppliers() {
-        return supplierRepository.findAll();
+    public List<SupplierResponse> getAllSuppliers() {
+        return supplierRepository.findAll().stream()
+                .map(supplier -> {
+                    SupplierResponse dto = new SupplierResponse();
+                    dto.setId(supplier.getId());
+                    dto.setName(supplier.getName());
+                    dto.setContactInfo(supplier.getContactInfo());
+                    dto.setAddress(supplier.getAddress());
+                    return dto;
+                }).toList();
     }
 
     public Supplier createSupplier(SupplierRequest request) {
