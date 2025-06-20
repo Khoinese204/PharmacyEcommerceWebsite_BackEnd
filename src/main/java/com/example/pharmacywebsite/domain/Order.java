@@ -30,4 +30,7 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
+
+    private Double voucherDiscount;
+    private Double shippingDiscount;
 }

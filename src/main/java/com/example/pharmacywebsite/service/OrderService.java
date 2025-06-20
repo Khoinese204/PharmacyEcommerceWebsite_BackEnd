@@ -7,9 +7,17 @@ import com.example.pharmacywebsite.designpattern.FactoryMethod.PaymentFactory;
 import com.example.pharmacywebsite.designpattern.State.OrderContext;
 import com.example.pharmacywebsite.domain.*;
 import com.example.pharmacywebsite.dto.CreateOrderRequest;
-
+import com.example.pharmacywebsite.dto.CustomerInfoDto;
+import com.example.pharmacywebsite.dto.ItemDto;
+import com.example.pharmacywebsite.dto.OrderDetailDto;
+import com.example.pharmacywebsite.dto.OrderDetailResponse;
+import com.example.pharmacywebsite.dto.OrderHistoryDto;
+import com.example.pharmacywebsite.dto.OrderItemDetailDto;
 import com.example.pharmacywebsite.dto.OrderItemDto;
+import com.example.pharmacywebsite.dto.PaymentDto;
 import com.example.pharmacywebsite.dto.ShippingInfoDto;
+import com.example.pharmacywebsite.dto.StatusLogDto;
+import com.example.pharmacywebsite.dto.SummaryDto;
 import com.example.pharmacywebsite.enums.OrderStatus;
 import com.example.pharmacywebsite.enums.PaymentMethod;
 
@@ -19,6 +27,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -53,6 +65,10 @@ public class OrderService {
         order.setPaymentMethod(request.getPaymentMethod());
         order.setStatus(OrderStatus.PENDING);
         order.setTotalPrice(request.getTotalPrice());
+
+        // ✅ Gán thêm 2 trường giảm giá
+        order.setVoucherDiscount(request.getVoucherDiscount() != null ? request.getVoucherDiscount() : 0);
+        order.setShippingDiscount(request.getShippingDiscount() != null ? request.getShippingDiscount() : 0);
 
         order = orderRepository.save(order);
 
@@ -114,6 +130,84 @@ public class OrderService {
 
         OrderContext context = new OrderContext(order, user, orderRepository, orderStatusLogRepository);
         context.cancel();
+    }
+
+    public List<OrderHistoryDto> getOrdersByUserId(Integer userId) {
+        List<Order> orders = orderRepository.findByUser_IdOrderByOrderDateDesc(userId);
+        return orders.stream().map(order -> new OrderHistoryDto(
+                "DH" + order.getId(),
+                order.getTotalPrice(),
+                order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy")),
+                order.getStatus().name())).collect(Collectors.toList());
+    }
+
+    // service/OrderService.java
+    // service/OrderService.java
+    public OrderDetailResponse getOrderById(Integer id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order không tồn tại"));
+
+        List<OrderStatusLog> logs = orderStatusLogRepository.findByOrderIdOrderByUpdatedAtAsc(id);
+
+        List<StatusLogDto> statusLogs = new ArrayList<>();
+        // Thêm PENDING log đầu tiên
+        statusLogs.add(new StatusLogDto(
+                order.getStatus().name(), // chuyển enum thành String
+                order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+
+        // Thêm các log tiếp theo từ order_status_logs
+        for (OrderStatusLog log : logs) {
+            statusLogs.add(new StatusLogDto(
+                    log.getStatus().name(),
+                    log.getUpdatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+        }
+
+        List<ItemDto> items = orderItemRepository.findByOrderId(id).stream().map(oi -> {
+            Medicine med = oi.getMedicine();
+            return new ItemDto(
+                    med.getName(),
+                    med.getImageUrl(),
+                    med.getUnit(),
+                    oi.getUnitPrice(),
+                    med.getOriginalPrice(),
+                    oi.getQuantity());
+        }).toList();
+
+        SummaryDto summary = new SummaryDto(
+                items.stream().mapToDouble(i -> i.getOriginalPrice() * i.getQuantity()).sum(),
+                items.stream().mapToDouble(i -> (i.getOriginalPrice() - i.getUnitPrice()) * i.getQuantity()).sum(),
+                order.getVoucherDiscount() != null ? order.getVoucherDiscount() : 0,
+                order.getShippingDiscount() != null ? order.getShippingDiscount() : 0,
+                order.getTotalPrice());
+
+        PaymentTransaction tx = paymentTransactionRepository.findByOrder_Id(id)
+                .orElseThrow(() -> new RuntimeException("Không có thông tin thanh toán"));
+        PaymentDto payment = new PaymentDto(order.getPaymentMethod().name(), tx.getStatus().name());
+
+        OrderShippingInfo ship = orderShippingInfoRepository.findByOrder(order);
+        if (ship == null) {
+            throw new RuntimeException("Không có thông tin giao hàng");
+        }
+        CustomerInfoDto customer = new CustomerInfoDto(
+                ship.getRecipientName(),
+                ship.getPhone(),
+                ship.getAddressDetail() + ", " + ship.getWard() + ", " + ship.getDistrict() + ", " + ship.getProvince(),
+                ship.getNote());
+
+        boolean canCancel = order.getStatus() == OrderStatus.PENDING;
+
+        return new OrderDetailResponse(
+                order.getId(),
+                "DH" + order.getId(),
+                order.getOrderDate(),
+                order.getOrderDate().toLocalDate().plusDays(3), // giả sử ngày giao hàng là 3 ngày sau
+                order.getStatus().name(),
+                statusLogs,
+                items,
+                summary,
+                payment,
+                customer,
+                canCancel);
     }
 
 }

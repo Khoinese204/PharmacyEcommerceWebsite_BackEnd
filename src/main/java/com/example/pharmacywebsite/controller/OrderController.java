@@ -4,9 +4,11 @@ package com.example.pharmacywebsite.controller;
 import com.example.pharmacywebsite.domain.Order;
 import com.example.pharmacywebsite.dto.CreateOrderRequest;
 import com.example.pharmacywebsite.dto.CreateOrderResponse;
+import com.example.pharmacywebsite.dto.OrderHistoryDto;
 import com.example.pharmacywebsite.service.OrderService;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -31,18 +33,13 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{orderId}/next")
-    public ResponseEntity<?> moveToNext(@PathVariable Integer orderId,
-            @RequestParam Integer userId) {
-        orderService.moveOrderToNextStatus(orderId, userId);
-        return ResponseEntity.ok("Trạng thái đơn hàng đã được cập nhật");
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getOrderById(@PathVariable("id") Integer id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
-    // 👉 Huỷ đơn hàng
-    @PostMapping("/{orderId}/cancel")
-    public ResponseEntity<?> cancelOrder(@PathVariable Integer orderId,
-            @RequestParam Integer userId) {
-        orderService.cancelOrder(orderId, userId);
-        return ResponseEntity.ok("Đơn hàng đã bị huỷ");
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getOrdersByUserId(@PathVariable("userId") Integer userId) {
+        return ResponseEntity.ok(orderService.getOrdersByUserId(userId));
     }
 }
