@@ -140,7 +140,7 @@ public class WarehouseService {
             dto.setSupplierName(order.getSupplier().getName());
             dto.setTotalPrice(order.getTotalPrice());
             dto.setCreatedAt(order.getCreatedAt());
-            dto.setStatus(order.getStatus()); // nếu dùng enum
+            // dto.setStatus(order.getStatus()); // nếu dùng enum
             return dto;
         }).collect(Collectors.toList());
     }
