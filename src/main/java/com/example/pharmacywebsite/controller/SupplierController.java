@@ -2,6 +2,7 @@ package com.example.pharmacywebsite.controller;
 
 import com.example.pharmacywebsite.domain.Supplier;
 import com.example.pharmacywebsite.dto.SupplierRequest;
+import com.example.pharmacywebsite.dto.SupplierResponse;
 import com.example.pharmacywebsite.service.SupplierService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class SupplierController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Supplier>> getAllSuppliers() {
+    public ResponseEntity<List<SupplierResponse>> getAllSuppliers() {
         return ResponseEntity.ok(supplierService.getAllSuppliers());
     }
 

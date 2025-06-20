@@ -15,6 +15,6 @@ public class CouponCodeFixedAmountStrategy implements DiscountStrategy {
 
     @Override
     public double applyDiscount(List<CartItemRequest> items, MedicineRepository medicineRepo) {
-        return discountAmount; // luôn áp dụng
+        return discountAmount;
     }
 }

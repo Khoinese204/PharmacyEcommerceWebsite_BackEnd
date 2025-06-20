@@ -11,6 +11,7 @@ import com.example.pharmacywebsite.dto.CustomerInfoDto;
 import com.example.pharmacywebsite.dto.ItemDto;
 import com.example.pharmacywebsite.dto.OrderDetailDto;
 import com.example.pharmacywebsite.dto.OrderDetailResponse;
+import com.example.pharmacywebsite.dto.OrderDto;
 import com.example.pharmacywebsite.dto.OrderHistoryDto;
 import com.example.pharmacywebsite.dto.OrderItemDetailDto;
 import com.example.pharmacywebsite.dto.OrderItemDto;
@@ -18,12 +19,14 @@ import com.example.pharmacywebsite.dto.PaymentDto;
 import com.example.pharmacywebsite.dto.ShippingInfoDto;
 import com.example.pharmacywebsite.dto.StatusLogDto;
 import com.example.pharmacywebsite.dto.SummaryDto;
+import com.example.pharmacywebsite.dto.UpdateOrderStatusRequest;
 import com.example.pharmacywebsite.enums.OrderStatus;
 import com.example.pharmacywebsite.enums.PaymentMethod;
-
+import com.example.pharmacywebsite.exception.ApiException;
 import com.example.pharmacywebsite.repository.*;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -208,6 +211,47 @@ public class OrderService {
                 payment,
                 customer,
                 canCancel);
+    }
+
+    public List<OrderDto> getAllOrders() {
+        return orderRepository.findAll().stream().map(order -> {
+            OrderDto dto = new OrderDto();
+            dto.setOrderId(order.getId());
+            dto.setOrderDate(order.getOrderDate());
+            dto.setCustomer(order.getUser().getFullName());
+            dto.setStatus(order.getStatus());
+            dto.setTotalPrice(order.getTotalPrice());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    // ✅ Cập nhật trạng thái đơn hàng
+    @Transactional
+    public void updateOrderStatus(Integer id, UpdateOrderStatusRequest request) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!id.equals(request.getOrderId())) {
+            throw new RuntimeException("ID mismatch between path and request body");
+        }
+
+        // Lấy user thực hiện cập nhật
+        User updatedBy = userRepository.findById(request.getUpdatedByUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Cập nhật trạng thái đơn hàng
+        order.setStatus(request.getNewStatus());
+        orderRepository.save(order);
+
+        // Tạo log trạng thái
+        OrderStatusLog log = new OrderStatusLog();
+        log.setOrder(order);
+        log.setStatus(request.getNewStatus());
+        log.setUpdatedBy(updatedBy);
+        log.setUpdatedAt(LocalDateTime.now());
+        log.setNote(request.getNote());
+
+        orderStatusLogRepository.save(log);
     }
 
 }
