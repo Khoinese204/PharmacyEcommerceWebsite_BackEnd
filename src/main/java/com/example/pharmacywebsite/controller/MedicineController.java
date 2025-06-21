@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,60 @@ public class MedicineController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(topProducts);
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<?> upload(
+            @RequestParam(name = "userId") Integer userId,
+            @RequestParam(name = "name") String name,
+            @RequestParam(name = "unit") String unit,
+            @RequestParam(name = "originalPrice") Double originalPrice,
+            @RequestParam(name = "price") Double price,
+            @RequestParam(name = "categoryId") Integer categoryId,
+            @RequestParam(name = "shortDescription") String shortDescription,
+            @RequestParam(name = "brandOrigin") String brandOrigin,
+            @RequestParam(name = "manufacturer") String manufacturer,
+            @RequestParam(name = "countryOfManufacture") String countryOfManufacture,
+            @RequestParam(name = "details") String details,
+            @RequestParam(name = "image", required = false) MultipartFile image) {
+        try {
+            medicineService.saveMedicine(
+                    userId, name, unit, originalPrice, price,
+                    brandOrigin,
+                    manufacturer, countryOfManufacture, shortDescription,
+                    categoryId, details, image);
+            return ResponseEntity.ok("Thêm thuốc thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/upload")
+    public ResponseEntity<?> updateMedicine(
+            @PathVariable(name = "id") Integer id,
+            @RequestParam(name = "userId") Integer userId,
+            @RequestParam(name = "name") String name,
+            @RequestParam(name = "unit") String unit,
+            @RequestParam(name = "originalPrice") Double originalPrice,
+            @RequestParam(name = "price") Double price,
+            @RequestParam(name = "categoryId") Integer categoryId,
+            @RequestParam(name = "shortDescription") String shortDescription,
+            @RequestParam(name = "brandOrigin") String brandOrigin,
+            @RequestParam(name = "manufacturer") String manufacturer,
+            @RequestParam(name = "countryOfManufacture") String countryOfManufacture,
+            @RequestParam(name = "details") String details, // JSON string
+            @RequestParam(name = "image", required = false) MultipartFile image) {
+
+        try {
+            medicineService.updateMedicine(id, userId, name, unit, originalPrice, price,
+                    brandOrigin, manufacturer, countryOfManufacture, shortDescription,
+                    categoryId, details, image);
+            return ResponseEntity.ok("Cập nhật thuốc thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi: " + e.getMessage());
+        }
     }
 
 }

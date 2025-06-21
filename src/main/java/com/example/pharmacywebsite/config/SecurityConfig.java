@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/promotions/**").permitAll()
                 .requestMatchers("/api/pricing/**").permitAll()
                 .requestMatchers("/api/upload/**").permitAll()
+                .requestMatchers("/images/**").permitAll() // ✅ mở quyền truy cập ảnh
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -56,4 +57,5 @@ public class SecurityConfig {
     public AuthenticationManager authManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
+
 }

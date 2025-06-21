@@ -19,4 +19,6 @@ public class MedicineDto {
     private Integer categoryId;
 
     private List<MedicineDetailDto> details; // thêm dòng này
+    private UserFullnameDto creator;
+    private UserFullnameDto updater;
 }

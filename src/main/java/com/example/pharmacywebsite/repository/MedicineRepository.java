@@ -27,4 +27,7 @@ public interface MedicineRepository extends JpaRepository<Medicine, Integer> {
                 LIMIT 8
             """, nativeQuery = true)
     List<Object[]> findTop8BestSellingRaw(); // Dạng raw dữ liệu
+
+    @Query("SELECT m.imageUrl FROM Medicine m WHERE m.imageUrl LIKE 'product%.jpg'")
+    List<String> findAllProductImageNames();
 }

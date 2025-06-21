@@ -5,16 +5,16 @@ public class BestSellingProductDto {
     private String name;
     private String imageUrl;
     private Double originalPrice;
-    private Double discountedPrice;
+    private Double price;
     private String unit;
 
     public BestSellingProductDto(Integer id, String name, String imageUrl,
-            Double originalPrice, Double discountedPrice, String unit) {
+            Double originalPrice, Double price, String unit) {
         this.id = id;
         this.name = name;
         this.imageUrl = imageUrl;
         this.originalPrice = originalPrice;
-        this.discountedPrice = discountedPrice;
+        this.price = price;
         this.unit = unit;
     }
 
@@ -35,8 +35,8 @@ public class BestSellingProductDto {
         return originalPrice;
     }
 
-    public Double getDiscountedPrice() {
-        return discountedPrice;
+    public Double getPrice() {
+        return price;
     }
 
     public String getUnit() {
