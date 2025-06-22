@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,6 +69,22 @@ public class InventoryService {
             dto.setCreatedAt(log.getCreatedAt().format(formatter));
             return dto;
         }).toList();
+    }
+
+    public int getQuantityByMedicineId(Integer medicineId) {
+        List<Inventory> inventories = inventoryRepository.findByMedicineId(medicineId);
+        return inventories.stream()
+                .mapToInt(Inventory::getQuantity)
+                .sum();
+    }
+
+    public Map<Integer, Integer> getTotalQuantitiesByMedicineIds(List<Integer> medicineIds) {
+        List<Inventory> inventories = inventoryRepository.findByMedicineIdIn(medicineIds);
+
+        return inventories.stream()
+                .collect(Collectors.groupingBy(
+                        inv -> inv.getMedicine().getId(),
+                        Collectors.summingInt(Inventory::getQuantity)));
     }
 
 }

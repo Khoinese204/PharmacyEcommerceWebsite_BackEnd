@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,5 +43,16 @@ public class InventoryController {
     // inventoryService.updateQuantity(batchNumber, quantity);
     // return ResponseEntity.ok().build();
     // }
+    @GetMapping("/quantity/{medicineId}")
+    public ResponseEntity<Integer> getInventoryQuantity(@PathVariable("medicineId") Integer medicineId) {
+        int quantity = inventoryService.getQuantityByMedicineId(medicineId);
+        return ResponseEntity.ok(quantity);
+    }
+
+    @PostMapping("/quantities")
+    public ResponseEntity<Map<Integer, Integer>> getQuantitiesForMedicines(@RequestBody List<Integer> medicineIds) {
+        Map<Integer, Integer> map = inventoryService.getTotalQuantitiesByMedicineIds(medicineIds);
+        return ResponseEntity.ok(map);
+    }
 
 }

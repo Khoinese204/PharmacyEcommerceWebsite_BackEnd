@@ -27,4 +27,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Long countByCreatedAtBetweenAndQuantityLessThanEqual(LocalDateTime start, LocalDateTime end, Integer threshold);
 
     List<Inventory> findByQuantityLessThanEqual(Integer threshold);
+
+    List<Inventory> findByMedicineId(Integer medicineId);
+
+    List<Inventory> findByMedicineIdIn(List<Integer> ids);
 }
