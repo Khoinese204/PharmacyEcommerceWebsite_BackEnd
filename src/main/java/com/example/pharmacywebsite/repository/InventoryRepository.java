@@ -32,4 +32,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     List<Inventory> findByQuantityLessThanEqual(Integer threshold);
 
     Optional<Inventory> findByMedicineId(Long medicineId);
+
+    List<Inventory> findByMedicineId(Integer medicineId);
+
+    List<Inventory> findByMedicineIdIn(List<Integer> ids);
 }
