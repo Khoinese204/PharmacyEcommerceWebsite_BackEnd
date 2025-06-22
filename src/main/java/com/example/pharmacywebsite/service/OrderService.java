@@ -235,23 +235,53 @@ public class OrderService {
             throw new RuntimeException("ID mismatch between path and request body");
         }
 
-        // Lấy user thực hiện cập nhật
         User updatedBy = userRepository.findById(request.getUpdatedByUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Cập nhật trạng thái đơn hàng
-        order.setStatus(request.getNewStatus());
-        orderRepository.save(order);
+        OrderContext context = new OrderContext(order, updatedBy, orderRepository, orderStatusLogRepository);
 
-        // Tạo log trạng thái
-        OrderStatusLog log = new OrderStatusLog();
-        log.setOrder(order);
-        log.setStatus(request.getNewStatus());
-        log.setUpdatedBy(updatedBy);
-        log.setUpdatedAt(LocalDateTime.now());
-        log.setNote(request.getNote());
+        OrderStatus currentStatus = order.getStatus();
+        OrderStatus targetStatus = request.getNewStatus();
 
-        orderStatusLogRepository.save(log);
+        if (currentStatus == targetStatus) {
+            // Không cần cập nhật nếu trạng thái không thay đổi
+            return;
+        }
+
+        if (targetStatus == OrderStatus.CANCELLED) {
+            context.cancel();
+        } else {
+            // Logic cho phép chuyển tiếp theo thứ tự
+            switch (currentStatus) {
+                case PENDING -> {
+                    if (targetStatus == OrderStatus.PACKING) {
+                        context.next();
+                    } else {
+                        throw new RuntimeException("Không thể chuyển trực tiếp từ PENDING đến " + targetStatus);
+                    }
+                }
+                case PACKING -> {
+                    if (targetStatus == OrderStatus.DELIVERING) {
+                        context.next();
+                    } else {
+                        throw new RuntimeException("Không thể chuyển từ PACKING đến " + targetStatus);
+                    }
+                }
+                case DELIVERING -> {
+                    if (targetStatus == OrderStatus.DELIVERED) {
+                        context.next();
+                    } else {
+                        throw new RuntimeException("Không thể chuyển từ DELIVERING đến " + targetStatus);
+                    }
+                }
+                case DELIVERED, CANCELLED -> {
+                    throw new RuntimeException("Không thể cập nhật từ trạng thái đã kết thúc");
+                }
+                default -> {
+                    throw new RuntimeException("Trạng thái không hợp lệ");
+                }
+            }
+        }
     }
 
 }
