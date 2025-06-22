@@ -1,65 +1,99 @@
-// package com.example.pharmacywebsite.seed;
+package com.example.pharmacywebsite.seed;
 
-// import com.example.pharmacywebsite.domain.*;
-// import com.example.pharmacywebsite.enums.OrderStatus;
-// import com.example.pharmacywebsite.enums.PaymentMethod;
-// import com.example.pharmacywebsite.repository.*;
-// import jakarta.annotation.PostConstruct;
-// import lombok.RequiredArgsConstructor;
-// import org.springframework.stereotype.Component;
+import com.example.pharmacywebsite.domain.*;
+import com.example.pharmacywebsite.enums.OrderStatus;
+import com.example.pharmacywebsite.enums.PaymentMethod;
+import com.example.pharmacywebsite.enums.PaymentStatus;
+import com.example.pharmacywebsite.repository.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
 
-// import java.time.LocalDateTime;
-// import java.util.Arrays;
+import org.springframework.stereotype.Component;
 
-// @Component
-// @org.springframework.core.annotation.Order(5)
-// @RequiredArgsConstructor
-// public class OrderSeeder {
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
 
-//     private final OrderRepository orderRepository;
-//     private final OrderItemRepository orderItemRepository;
-//     private final UserRepository userRepository;
-//     private final MedicineRepository medicineRepository;
+@Component
+@org.springframework.core.annotation.Order(7) // dùng đầy đủ ở đây
+@RequiredArgsConstructor
+public class OrderSeeder implements CommandLineRunner {
 
-//     @PostConstruct
-//     public void seed() {
-//         if (orderRepository.count() == 0) {
-//             // Lấy user và thuốc mẫu có kiểm tra tồn tại rõ ràng
-//             User user = userRepository.findById(1)
-//                     .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy User với ID = 1"));
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderShippingInfoRepository orderShippingInfoRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
+    private final UserRepository userRepository;
+    private final MedicineRepository medicineRepository;
 
-//             Medicine medicine1 = medicineRepository.findById(7)
-//                     .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy Medicine với ID = 1"));
+    @Override
+    public void run(String... args) {
+        if (orderRepository.count() == 0) { // Comment để chạy lại seed (Chỉ chạy 1 lần duy nhất, TẮT TRƯỚC KHI CHẠY
+                                                // LẠI)
+            List<User> customers = userRepository.findByRole_Name("Customer");
+            List<Medicine> medicines = medicineRepository.findAll();
+            if (customers.isEmpty() || medicines.size() < 3)
+                return;
 
-//             Medicine medicine2 = medicineRepository.findById(8)
-//                     .orElseThrow(() -> new RuntimeException("❌ Không tìm thấy Medicine với ID = 2"));
+            Random random = new Random();
+            LocalDateTime now = LocalDateTime.now();
 
-//             // Tạo đơn hàng
-//             Order order = new Order();
-//             order.setUser(user);
-//             order.setOrderDate(LocalDateTime.now().minusDays(2));
-//             order.setStatus(OrderStatus.PENDING);
-//             order.setPaymentMethod(PaymentMethod.MOMO);
-//             order.setTotalPrice(medicine1.getPrice() * 2 + medicine2.getPrice());
+            for (int i = 1; i <= 10; i++) {
+                User customer = customers.get(random.nextInt(customers.size()));
+                Order order = new Order();
+                order.setUser(customer);
+                order.setOrderDate(now.minusDays(random.nextInt(20)));
+                order.setStatus(random.nextBoolean() ? OrderStatus.PENDING : OrderStatus.DELIVERED);
+                order.setPaymentMethod(random.nextBoolean() ? PaymentMethod.COD : PaymentMethod.BANK_TRANSFER);
+                order.setVoucherDiscount(5000.0);
+                order.setShippingDiscount(10000.0);
+                order.setTotalPrice(0.0); // tính sau
+                order = orderRepository.save(order);
 
-//             orderRepository.save(order);
+                // Shipping info
+                OrderShippingInfo shipping = new OrderShippingInfo();
+                shipping.setOrder(order);
+                shipping.setRecipientName("Nguyễn Văn " + i);
+                shipping.setPhone("090000000" + i);
+                shipping.setProvince("Hồ Chí Minh");
+                shipping.setDistrict("Quận " + (i % 5 + 1));
+                shipping.setWard("Phường " + (i % 10 + 1));
+                shipping.setAddressDetail("Số " + i + " Đường ABC");
+                shipping.setNote("Giao giờ hành chính");
+                shipping.setRequiresInvoice(i % 2 == 0);
+                orderShippingInfoRepository.save(shipping);
 
-//             // Tạo order items
-//             OrderItem item1 = new OrderItem();
-//             item1.setOrder(order);
-//             item1.setMedicine(medicine1);
-//             item1.setQuantity(2);
-//             item1.setUnitPrice(medicine1.getPrice());
+                // Order items
+                double total = 0.0;
+                for (int j = 0; j < 2; j++) {
+                    Medicine med = medicines.get(random.nextInt(medicines.size()));
+                    int quantity = random.nextInt(3) + 1;
+                    OrderItem item = new OrderItem();
+                    item.setOrder(order);
+                    item.setMedicine(med);
+                    item.setQuantity(quantity);
+                    item.setUnitPrice(med.getPrice());
+                    total += quantity * med.getPrice();
+                    orderItemRepository.save(item);
+                }
+                total = total - order.getVoucherDiscount() - order.getShippingDiscount();
+                order.setTotalPrice(Math.max(total, 0));
+                orderRepository.save(order);
 
-//             OrderItem item2 = new OrderItem();
-//             item2.setOrder(order);
-//             item2.setMedicine(medicine2);
-//             item2.setQuantity(1);
-//             item2.setUnitPrice(medicine2.getPrice());
+                // Payment
+                PaymentTransaction transaction = new PaymentTransaction();
+                transaction.setOrder(order);
+                transaction.setPaymentMethod(order.getPaymentMethod());
+                transaction.setAmount(order.getTotalPrice());
+                transaction.setStatus(
+                        order.getPaymentMethod() == PaymentMethod.COD ? PaymentStatus.PENDING : PaymentStatus.SUCCESS);
+                transaction.setProviderTransactionId("TRANS" + System.currentTimeMillis());
+                transaction.setCreatedAt(order.getOrderDate());
+                transaction.setPaidAt(order.getPaymentMethod() == PaymentMethod.COD ? null : order.getOrderDate());
+                paymentTransactionRepository.save(transaction);
+            }
 
-//             orderItemRepository.saveAll(Arrays.asList(item1, item2));
-
-//             System.out.println("✅ Đã seed đơn hàng mẫu với 2 sản phẩm.");
-//         }
-//     }
-// }
+            System.out.println("✅ Order seed completed");
+        }
+    }
+}

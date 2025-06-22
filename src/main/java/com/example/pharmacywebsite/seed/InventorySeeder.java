@@ -5,65 +5,52 @@ import com.example.pharmacywebsite.domain.Medicine;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.InventoryRepository;
 import com.example.pharmacywebsite.repository.MedicineRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.Random;
 
-@Configuration
+@Component
+@Order(6) // chạy sau MedicineSeeder
 @RequiredArgsConstructor
 public class InventorySeeder implements CommandLineRunner {
 
-    private final InventoryRepository inventoryRepo;
-    private final MedicineRepository medicineRepo;
+    private final InventoryRepository inventoryRepository;
+    private final MedicineRepository medicineRepository;
 
     @Override
-    public void run(String... args) throws Exception {
-        if (inventoryRepo.count() == 0) {
-            Inventory inv1 = new Inventory();
-            inv1.setMedicine(medicineRepo.findById(1).orElseThrow());
-            inv1.setQuantity(100);
-            inv1.setExpiredAt(LocalDate.of(2025, 12, 31));
-            inv1.setStatus(InventoryStatus.AVAILABLE);
-            inv1.setCreatedAt(LocalDateTime.now());
+    @Transactional
+    public void run(String... args) {
+        if (inventoryRepository.count() == 0) { // Comment để chạy lại seed (Chỉ chạy 1 lần duy nhất, TẮT TRƯỚC KHI CHẠY
+                                                // LẠI)
+            Random random = new Random();
+            LocalDateTime now = LocalDateTime.now();
 
-            Inventory inv2 = new Inventory();
-            inv2.setMedicine(medicineRepo.findById(2).orElseThrow());
-            inv2.setQuantity(20);
-            inv2.setExpiredAt(LocalDate.of(2025, 9, 15));
-            inv2.setStatus(InventoryStatus.LOW_STOCK);
-            inv2.setCreatedAt(LocalDateTime.now());
+            for (int medicineId = 104; medicineId <= 124; medicineId++) {
+                Optional<Medicine> optionalMedicine = medicineRepository.findById(medicineId);
+                if (optionalMedicine.isPresent()) {
+                    Medicine medicine = optionalMedicine.get();
 
-            Inventory inv3 = new Inventory();
-            inv3.setMedicine(medicineRepo.findById(3).orElseThrow());
-            inv3.setQuantity(50);
-            inv3.setExpiredAt(LocalDate.of(2025, 12, 1));
-            inv3.setStatus(InventoryStatus.AVAILABLE);
-            inv3.setCreatedAt(LocalDateTime.now());
+                    int quantity = random.nextInt(50) + 1; // 1 -> 50
 
-            Inventory inv4 = new Inventory();
-            inv4.setMedicine(medicineRepo.findById(4).orElseThrow());
-            inv4.setQuantity(10);
-            inv4.setExpiredAt(LocalDate.of(2026, 7, 1));
-            inv4.setStatus(InventoryStatus.LOW_STOCK);
-            inv4.setCreatedAt(LocalDateTime.now());
+                    Inventory inventory = new Inventory();
+                    inventory.setMedicine(medicine);
+                    inventory.setQuantity(quantity);
+                    inventory.setExpiredAt(LocalDate.now().plusMonths(random.nextInt(12) + 1));
+                    inventory.setStatus(quantity <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
+                    inventory.setCreatedAt(now.minusDays(random.nextInt(30)));
 
-            Inventory inv5 = new Inventory();
-            inv5.setMedicine(medicineRepo.findById(5).orElseThrow());
-            inv5.setQuantity(75);
-            inv5.setExpiredAt(LocalDate.of(2026, 1, 20));
-            inv5.setStatus(InventoryStatus.AVAILABLE);
-            inv5.setCreatedAt(LocalDateTime.now());
+                    inventoryRepository.save(inventory);
+                }
+            }
 
-            inventoryRepo.save(inv1);
-            inventoryRepo.save(inv2);
-            inventoryRepo.save(inv3);
-            inventoryRepo.save(inv4);
-            inventoryRepo.save(inv5);
-
-            System.out.println("✅ Seeded 5 inventory records.");
+            System.out.println("✅ Inventory seed completed.");
         }
     }
 }

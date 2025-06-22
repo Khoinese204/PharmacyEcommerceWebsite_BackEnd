@@ -13,7 +13,7 @@ public class AutoRestockObserver implements InventoryObserver {
     @Override
     public void update(Inventory inventory) {
         if (inventory.getQuantity() == 0) {
-            logger.info("[Tự động đặt hàng] Thuốc '{}' đã hết. Cần nhập kho thêm.", inventory.getMedicine().getName());
+            logger.info("Medicine is low stock. Need import.", inventory.getMedicine().getName());
         }
     }
 }

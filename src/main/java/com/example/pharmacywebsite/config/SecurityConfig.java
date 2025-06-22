@@ -43,6 +43,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/pricing/**").permitAll()
                 .requestMatchers("/api/upload/**").permitAll()
                 .requestMatchers("/images/**").permitAll() // ✅ mở quyền truy cập ảnh
+                .requestMatchers("/api/users/**").permitAll()
+                .requestMatchers("/api/admin/dashboard/**").permitAll()
+                .requestMatchers("/images/**", "/images/avatar/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

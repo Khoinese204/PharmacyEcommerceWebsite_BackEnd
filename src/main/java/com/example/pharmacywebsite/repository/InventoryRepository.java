@@ -1,6 +1,7 @@
 package com.example.pharmacywebsite.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.example.pharmacywebsite.domain.Inventory;
@@ -21,4 +22,11 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Integer sumQuantityByMedicineIdAndNotExpired(
             @Param("medicineId") Integer medicineId,
             @Param("today") LocalDate today);
+
+    Long countByQuantityLessThanEqual(Integer threshold);
+
+    // ✅ Số sản phẩm tồn kho thấp được tạo trong ngày (dùng cho biểu đồ)
+    Long countByCreatedAtBetweenAndQuantityLessThanEqual(LocalDateTime start, LocalDateTime end, Integer threshold);
+
+    List<Inventory> findByQuantityLessThanEqual(Integer threshold);
 }
