@@ -13,6 +13,8 @@ import com.example.pharmacywebsite.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 @Order(2) // chạy sau RoleSeeder (nếu có)
@@ -32,7 +34,7 @@ public class UserSeeder implements CommandLineRunner {
             User admin = new User();
             admin.setFullName("Admin User");
             admin.setEmail("admin@example.com");
-            admin.setPasswordHash(passwordEncoder.encode("admin123")); // nên mã hóa thật nếu vào production
+            admin.setPasswordHash(passwordEncoder.encode("admin123")); // nên mã hóa thật
             admin.setGender("MALE");
             admin.setAddress("123 Admin St");
             admin.setAvatarUrl("https://example.com/admin.png");
@@ -83,6 +85,31 @@ public class UserSeeder implements CommandLineRunner {
             sales.setUpdatedAt(now);
             sales.setRole(salesRole);
             userRepository.save(sales);
+
+            // List of customer data with various createdAt dates for dashboard stats
+            List<String> names = Arrays.asList("Khách A", "Khách B", "Khách C", "Khách D", "Khách E", "Khách F",
+                    "Khách G");
+            List<String> emails = Arrays.asList("a@example.com", "b@example.com", "c@example.com", "d@example.com",
+                    "e@example.com", "f@example.com", "g@example.com");
+
+            for (int i = 0; i < names.size(); i++) {
+                User customerEx = new User();
+                customerEx.setFullName(names.get(i));
+                customerEx.setEmail(emails.get(i));
+                customerEx.setPasswordHash(passwordEncoder.encode("123456"));
+                customerEx.setGender(i % 2 == 0 ? "MALE" : "FEMALE");
+                customerEx.setAddress("Địa chỉ " + (i + 1));
+                customerEx.setAvatarUrl("https://example.com/customer" + (i + 1) + ".png");
+                customerEx.setBirthDate(LocalDate.parse("1995-02-0" + (i + 1)));
+
+                // Giả lập ngày đăng ký trải dài từ các ngày đầu tháng đến hiện tại
+                LocalDateTime createdAt = now.minusDays(6 - i); // ví dụ hôm nay là 22 thì: 16, 17, 18,...
+                customerEx.setCreatedAt(createdAt);
+                customerEx.setUpdatedAt(createdAt);
+                customerEx.setRole(customerRole);
+
+                userRepository.save(customerEx);
+            }
 
             System.out.println("✅ User seed completed");
         }

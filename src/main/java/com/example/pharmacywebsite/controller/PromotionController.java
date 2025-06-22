@@ -10,6 +10,7 @@ import com.example.pharmacywebsite.designpattern.Strategy.ThresholdFixedAmountDi
 import com.example.pharmacywebsite.domain.Promotion;
 import com.example.pharmacywebsite.dto.ApplyPromotionRequest;
 import com.example.pharmacywebsite.dto.ApplyPromotionResponse;
+import com.example.pharmacywebsite.dto.CouponDTO;
 import com.example.pharmacywebsite.dto.PromotionDTO;
 import com.example.pharmacywebsite.repository.MedicineRepository;
 import com.example.pharmacywebsite.repository.PromotionRepository;
@@ -30,6 +31,25 @@ public class PromotionController {
 
     private final PromotionRepository promotionRepo;
     private final MedicineRepository medicineRepo;
+
+
+
+    @GetMapping("/all")
+public List<CouponDTO> getAllPromotions() {
+    return promotionRepo.findAll()
+            .stream()
+            .map(p -> new CouponDTO(
+                    p.getId(),
+                    p.getName(),
+                    p.getDescription(),
+                    p.getDiscountPercent(),
+                    p.getApplicableCategory() != null ? p.getApplicableCategory().getName() : null,
+                    p.getStartDate(),
+                    p.getEndDate()
+            ))
+            .collect(Collectors.toList());
+}
+
 
     /**
      * Lấy danh sách mã khuyến mãi còn hiệu lực tại thời điểm hiện tại

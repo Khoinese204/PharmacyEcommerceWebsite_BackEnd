@@ -6,7 +6,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
- 
+
 @Entity
 @Table(name = "users")
 @Getter
@@ -28,12 +28,17 @@ public class User {
     private LocalDate birthDate;
     private String address;
 
+    @Column(length = 20)
+    private String phoneNumber;
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
+
+    // @Column
+    // private Boolean isDeleted = false;
 
     private String avatarUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
-
