@@ -48,4 +48,10 @@ public class InventoryController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<InventoryDto> getInventoryById(@PathVariable("id") int inventoryId) {
+        InventoryDto inventory = inventoryService.getInventoryById(inventoryId);
+        return ResponseEntity.ok(inventory);
+    }
+
 }

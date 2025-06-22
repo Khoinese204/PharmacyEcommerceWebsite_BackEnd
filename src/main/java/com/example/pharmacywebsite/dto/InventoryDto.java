@@ -13,5 +13,6 @@ public class InventoryDto {
     private String expiryDate;
     private String status;
     private String dateStatus;
+    private Double unitPrice;
 
 }

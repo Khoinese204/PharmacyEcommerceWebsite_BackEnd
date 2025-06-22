@@ -79,7 +79,8 @@ public class InventoryService {
             dto.setQuantity(inv.getQuantity());
             dto.setExpiryDate(inv.getExpiredAt().toString());
             dto.setStatus(mapStatusToText(computedStatus)); // Còn hàng / Sắp hết / Hết hàng
-            dto.setDateStatus(mapDateStatusToText(dateStatus)); // Còn hạn / Hết hạn
+            dto.setDateStatus(mapDateStatusToText(dateStatus));
+            dto.setUnitPrice(inv.getMedicine().getOriginalPrice()); // Còn hạn / Hết hạn
             return dto;
         }).toList();
     }
@@ -129,4 +130,33 @@ public class InventoryService {
         inventoryRepository.save(inventory);
         inventoryObserverManager.notifyAll(inventory);
     }
+
+    public InventoryDto getInventoryById(int inventoryId) {
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tồn kho"));
+
+        Medicine medicine = inventory.getMedicine();
+
+        // Tính trạng thái tồn kho
+        InventoryStatus computedStatus = inventory.getQuantity() == 0
+                ? InventoryStatus.OUT_OF_STOCK
+                : (inventory.getQuantity() <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
+
+        // Tình trạng hạn sử dụng
+        DateStatus dateStatus = inventory.getExpiredAt().isBefore(LocalDate.now())
+                ? DateStatus.EXPIRED
+                : DateStatus.VALID;
+
+        InventoryDto dto = new InventoryDto();
+        dto.setId(inventory.getId());
+        dto.setBatchNumber("BATCH" + inventory.getId());
+        dto.setProductName(medicine.getName());
+        dto.setQuantity(inventory.getQuantity());
+        dto.setExpiryDate(inventory.getExpiredAt().toString());
+        dto.setStatus(mapStatusToText(computedStatus));
+        dto.setDateStatus(mapDateStatusToText(dateStatus));
+        dto.setUnitPrice(medicine.getOriginalPrice());
+        return dto;
+    }
+
 }
