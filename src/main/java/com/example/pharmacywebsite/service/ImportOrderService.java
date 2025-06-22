@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.pharmacywebsite.designpattern.Observer.InventoryObserverManager;
 import com.example.pharmacywebsite.domain.ImportOrder;
 import com.example.pharmacywebsite.domain.ImportOrderItem;
 import com.example.pharmacywebsite.domain.Inventory;
@@ -37,6 +38,7 @@ public class ImportOrderService {
     private final ImportOrderItemRepository importOrderItemRepository;
     private final InventoryLogRepository inventoryLogRepository;
     private final InventoryRepository inventoryRepository;
+    private final InventoryObserverManager inventoryObserverManager;
 
     public ImportOrder createImportOrder(ImportOrderRequest request) {
         Supplier supplier = supplierRepository.findById(request.getSupplierId())
@@ -70,23 +72,25 @@ public class ImportOrderService {
         for (ImportOrderItem item : items) {
             Medicine medicine = item.getMedicine();
 
-            List<Inventory> inventoryList = inventoryRepository.findByMedicineAndStatusOrderByExpiredAtAsc(
-                    medicine,
-                    InventoryStatus.AVAILABLE);
+            List<Inventory> inventoryList = inventoryRepository.findByMedicineOrderByExpiredAtAsc(medicine);
 
             if (!inventoryList.isEmpty()) {
                 Inventory inventory = inventoryList.get(0);
-                inventory.setQuantity(inventory.getQuantity() + item.getQuantity());
+                int newQuantity = inventory.getQuantity() + item.getQuantity();
+                inventory.setQuantity(newQuantity);
+                inventory.setStatus(calculateStatus(newQuantity)); // ✅ cập nhật lại trạng thái
                 inventoryRepository.save(inventory);
+                inventoryObserverManager.notifyAll(inventory); // 👈 gọi Observer
             } else {
+                int quantity = item.getQuantity();
                 Inventory inventory = new Inventory();
                 inventory.setMedicine(medicine);
-                inventory.setQuantity(item.getQuantity());
+                inventory.setQuantity(quantity);
                 inventory.setExpiredAt(LocalDate.now().plusMonths(24));
-                inventory.setStatus(InventoryStatus.AVAILABLE);
+                inventory.setStatus(calculateStatus(quantity)); // ✅ không set cứng nữa
                 inventory.setCreatedAt(LocalDateTime.now());
-
                 inventoryRepository.save(inventory);
+                inventoryObserverManager.notifyAll(inventory); // 👈 gọi Observer
             }
 
             // Ghi log
@@ -150,12 +154,8 @@ public class ImportOrderService {
         return response;
     }
 
-    private void updateInventoryStatus(Inventory inventory) {
-        if (inventory.getQuantity() <= 5) {
-            inventory.setStatus(InventoryStatus.LOW_STOCK);
-        } else {
-            inventory.setStatus(InventoryStatus.AVAILABLE);
-        }
+    private InventoryStatus calculateStatus(int quantity) {
+        return quantity <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE;
     }
 
 }

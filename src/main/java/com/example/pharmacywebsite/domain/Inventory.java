@@ -25,6 +25,7 @@ public class Inventory {
     private LocalDate expiredAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "inventory_status")
     private InventoryStatus status;
 
     private LocalDateTime createdAt;

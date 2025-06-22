@@ -54,5 +54,18 @@ public class InventoryController {
         Map<Integer, Integer> map = inventoryService.getTotalQuantitiesByMedicineIds(medicineIds);
         return ResponseEntity.ok(map);
     }
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateInventoryQuantity(
+            @PathVariable("id") int inventoryId,
+            @RequestBody Map<String, Integer> body) {
+
+        if (!body.containsKey("quantity")) {
+            return ResponseEntity.badRequest().body("Missing 'quantity' field in request body");
+        }
+
+        Integer newQuantity = body.get("quantity");
+        inventoryService.updateInventoryQuantity(inventoryId, newQuantity);
+        return ResponseEntity.ok().build();
+    }
 
 }
