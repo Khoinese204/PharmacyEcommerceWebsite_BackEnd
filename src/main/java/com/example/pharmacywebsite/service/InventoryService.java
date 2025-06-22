@@ -1,12 +1,13 @@
-// InventoryService.java
 package com.example.pharmacywebsite.service;
 
+import com.example.pharmacywebsite.designpattern.Observer.InventoryObserverManager;
 import com.example.pharmacywebsite.domain.Inventory;
 import com.example.pharmacywebsite.domain.InventoryLog;
 import com.example.pharmacywebsite.domain.Medicine;
 import com.example.pharmacywebsite.domain.OrderItem;
 import com.example.pharmacywebsite.dto.InventoryDto;
 import com.example.pharmacywebsite.dto.InventoryLogDto;
+import com.example.pharmacywebsite.enums.DateStatus;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.InventoryLogRepository;
 import com.example.pharmacywebsite.repository.InventoryRepository;
@@ -14,7 +15,9 @@ import com.example.pharmacywebsite.repository.MedicineRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -24,32 +27,75 @@ public class InventoryService {
     private final InventoryRepository inventoryRepository;
     private final MedicineRepository medicineRepository;
     private final InventoryLogRepository inventoryLogRepository;
+    private final InventoryObserverManager inventoryObserverManager;
 
     public void deductStock(List<OrderItem> orderItems) {
         for (OrderItem item : orderItems) {
             Medicine medicine = item.getMedicine();
-            // ... logic to deduct inventory from medicine
-            // Bạn có thể truy xuất inventory và giảm số lượng tương ứng
+            List<Inventory> inventories = inventoryRepository.findByMedicineOrderByExpiredAtAsc(medicine);
+
+            int quantityToDeduct = item.getQuantity();
+            for (Inventory inventory : inventories) {
+                if (quantityToDeduct == 0)
+                    break;
+
+                int available = inventory.getQuantity();
+                if (available >= quantityToDeduct) {
+                    inventory.setQuantity(available - quantityToDeduct);
+                    inventoryRepository.save(inventory);
+                    inventoryObserverManager.notifyAll(inventory);
+                    quantityToDeduct = 0;
+                } else {
+                    inventory.setQuantity(0);
+                    inventoryRepository.save(inventory);
+                    inventoryObserverManager.notifyAll(inventory);
+                    quantityToDeduct -= available;
+                }
+            }
+
+            if (quantityToDeduct > 0) {
+                throw new RuntimeException("Không đủ hàng trong kho cho thuốc: " + medicine.getName());
+            }
         }
     }
 
     public List<InventoryDto> getAllInventory() {
         List<Inventory> inventories = inventoryRepository.findAll();
         return inventories.stream().map(inv -> {
+            // ✅ Tính trạng thái kho
+            InventoryStatus computedStatus = inv.getQuantity() == 0
+                    ? InventoryStatus.OUT_OF_STOCK
+                    : (inv.getQuantity() <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
+
+            // ✅ Tính tình trạng hạn
+            DateStatus dateStatus = inv.getExpiredAt().isBefore(LocalDate.now())
+                    ? DateStatus.EXPIRED
+                    : DateStatus.VALID;
+
             InventoryDto dto = new InventoryDto();
+            dto.setId(inv.getId());
             dto.setBatchNumber("BATCH" + inv.getId());
             dto.setProductName(inv.getMedicine().getName());
             dto.setQuantity(inv.getQuantity());
             dto.setExpiryDate(inv.getExpiredAt().toString());
-            dto.setStatus(mapStatusToText(inv.getStatus()));
+            dto.setStatus(mapStatusToText(computedStatus)); // Còn hàng / Sắp hết / Hết hàng
+            dto.setDateStatus(mapDateStatusToText(dateStatus)); // Còn hạn / Hết hạn
             return dto;
         }).toList();
     }
 
     private String mapStatusToText(InventoryStatus status) {
         return switch (status) {
-            case AVAILABLE -> "Còn hạn";
+            case AVAILABLE -> "Còn hàng";
             case LOW_STOCK -> "Sắp hết hàng";
+            case OUT_OF_STOCK -> "Hết hàng";
+        };
+    }
+
+    private String mapDateStatusToText(DateStatus status) {
+        return switch (status) {
+            case EXPIRED -> "Hết hạn";
+            case VALID -> "Còn hạn";
         };
     }
 
@@ -69,4 +115,18 @@ public class InventoryService {
         }).toList();
     }
 
+    public void updateInventoryQuantity(int inventoryId, int newQuantity) {
+        Inventory inventory = inventoryRepository.findById(inventoryId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tồn kho"));
+
+        inventory.setQuantity(newQuantity);
+
+        InventoryStatus newStatus = (newQuantity == 0)
+                ? InventoryStatus.OUT_OF_STOCK
+                : (newQuantity <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
+
+        inventory.setStatus(newStatus);
+        inventoryRepository.save(inventory);
+        inventoryObserverManager.notifyAll(inventory);
+    }
 }

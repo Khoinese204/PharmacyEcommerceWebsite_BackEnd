@@ -34,13 +34,18 @@ public class InventoryController {
         return inventoryService.getInventoryLogs();
     }
 
-    // @PatchMapping("/{id}")
-    // public ResponseEntity<?> updateInventoryQuantity(
-    // @PathVariable String batchNumber,
-    // @RequestBody Map<String, Integer> body) {
-    // Integer quantity = body.get("quantity");
-    // inventoryService.updateQuantity(batchNumber, quantity);
-    // return ResponseEntity.ok().build();
-    // }
+    @PatchMapping("/{id}")
+    public ResponseEntity<?> updateInventoryQuantity(
+            @PathVariable("id") int inventoryId,
+            @RequestBody Map<String, Integer> body) {
+
+        if (!body.containsKey("quantity")) {
+            return ResponseEntity.badRequest().body("Missing 'quantity' field in request body");
+        }
+
+        Integer newQuantity = body.get("quantity");
+        inventoryService.updateInventoryQuantity(inventoryId, newQuantity);
+        return ResponseEntity.ok().build();
+    }
 
 }

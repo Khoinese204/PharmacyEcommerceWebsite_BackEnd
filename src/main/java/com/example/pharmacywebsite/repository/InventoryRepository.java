@@ -15,6 +15,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
     List<Inventory> findByMedicineAndStatusOrderByExpiredAtAsc(Medicine medicine, InventoryStatus status);
 
+    List<Inventory> findByMedicineOrderByExpiredAtAsc(Medicine medicine);
+
     @Query("SELECT SUM(i.quantity) FROM Inventory i WHERE i.medicine.id = :medicineId AND i.status = 'ACTIVE' AND i.expiredAt >= :today")
     Integer sumQuantityByMedicineIdAndNotExpired(
             @Param("medicineId") Integer medicineId,
