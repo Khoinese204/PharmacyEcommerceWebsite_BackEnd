@@ -3,6 +3,7 @@ package com.example.pharmacywebsite.repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import com.example.pharmacywebsite.domain.Inventory;
 import com.example.pharmacywebsite.domain.Medicine;
@@ -29,6 +30,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     Long countByCreatedAtBetweenAndQuantityLessThanEqual(LocalDateTime start, LocalDateTime end, Integer threshold);
 
     List<Inventory> findByQuantityLessThanEqual(Integer threshold);
+
+    Optional<Inventory> findByMedicineId(Long medicineId);
 
     List<Inventory> findByMedicineId(Integer medicineId);
 
