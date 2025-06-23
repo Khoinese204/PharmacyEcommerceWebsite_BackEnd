@@ -153,18 +153,20 @@ public class OrderService {
         List<OrderStatusLog> logs = orderStatusLogRepository.findByOrderIdOrderByUpdatedAtAsc(id);
 
         List<StatusLogDto> statusLogs = new ArrayList<>();
-        // Thêm PENDING log đầu tiên
-        statusLogs.add(new StatusLogDto(
-                order.getStatus().name(), // chuyển enum thành String
-                order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
 
-        // Thêm các log tiếp theo từ order_status_logs
-        for (OrderStatusLog log : logs) {
+        // Nếu không có log nào => thêm log mặc định từ Order entity
+        if (logs.isEmpty()) {
             statusLogs.add(new StatusLogDto(
-                    log.getStatus().name(),
-                    log.getUpdatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+                    order.getStatus().name(),
+                    order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+        } else {
+            // Nếu đã có logs thì hiển thị từ bảng logs
+            for (OrderStatusLog log : logs) {
+                statusLogs.add(new StatusLogDto(
+                        log.getStatus().name(),
+                        log.getUpdatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+            }
         }
-
         List<ItemDto> items = orderItemRepository.findByOrderId(id).stream().map(oi -> {
             Medicine med = oi.getMedicine();
             return new ItemDto(

@@ -26,9 +26,12 @@ public class OrderStatusLogService {
         log.setUpdatedAt(LocalDateTime.now());
         log.setNote("Đơn hàng được tạo");
 
-        // Optional: set updatedBy là hệ thống/admin id = 1
-        userRepository.findById(1).ifPresent(log::setUpdatedBy);
+        userRepository.findByRole_Name("Admin")
+                .stream()
+                .findFirst()
+                .ifPresent(log::setUpdatedBy); // Gán admin đầu tiên có role là ADMIN
 
         orderStatusLogRepository.save(log);
     }
+
 }
