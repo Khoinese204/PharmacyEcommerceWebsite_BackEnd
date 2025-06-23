@@ -27,21 +27,20 @@ public class ExportService {
     private final OrderItemRepository orderItemRepository;
 
     public List<ExportOrderDto> getAllExportOrders() {
-        List<OrderShippingInfo> infos = orderShippingInfoRepository.findAll();
+        List<OrderStatus> allowedStatuses = List.of(
+                OrderStatus.PACKING,
+                OrderStatus.DELIVERING,
+                OrderStatus.DELIVERED,
+                OrderStatus.CANCELLED);
+
+        List<OrderShippingInfo> infos = orderShippingInfoRepository.findAllByOrder_StatusIn(allowedStatuses);
 
         return infos.stream()
-                .filter(info -> {
-                    OrderStatus status = info.getOrder().getStatus();
-
-                    if (status == OrderStatus.DELIVERING) {
-                        // ✅ Trừ tồn kho khi đơn đang giao hàng
+                .peek(info -> {
+                    // ✅ Chỉ trừ kho nếu đơn đang giao và chưa trừ
+                    if (info.getOrder().getStatus() == OrderStatus.DELIVERING) {
                         updateInventoryWhenDelivering(info);
                     }
-
-                    return status == OrderStatus.PACKING ||
-                            status == OrderStatus.DELIVERING ||
-                            status == OrderStatus.DELIVERED ||
-                            status == OrderStatus.CANCELLED;
                 })
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -63,15 +62,21 @@ public class ExportService {
     private void updateInventoryWhenDelivering(OrderShippingInfo info) {
         Integer orderId = info.getOrder().getId();
 
-        // ✅ Lấy danh sách mặt hàng trong đơn hàng từ repository
+        // ✅ Lấy danh sách mặt hàng trong đơn hàng
         List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
 
         for (OrderItem item : items) {
             Long medicineId = item.getMedicine().getId().longValue();
             int quantityToSubtract = item.getQuantity();
 
-            Inventory inventory = inventoryRepository.findByMedicineId(medicineId)
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy tồn kho cho thuốc ID " + medicineId));
+            // ✅ Tìm tất cả tồn kho của thuốc này
+            List<Inventory> inventories = inventoryRepository.findAllByMedicineId(medicineId);
+            if (inventories.isEmpty()) {
+                throw new RuntimeException("Không tìm thấy tồn kho cho thuốc ID " + medicineId);
+            }
+
+            // ✅ Ưu tiên trừ từ lô đầu tiên (sắp hết hạn)
+            Inventory inventory = inventories.get(0); // bạn có thể sắp xếp theo expiredAt nếu cần
 
             int newQuantity = inventory.getQuantity() - quantityToSubtract;
             if (newQuantity < 0) {

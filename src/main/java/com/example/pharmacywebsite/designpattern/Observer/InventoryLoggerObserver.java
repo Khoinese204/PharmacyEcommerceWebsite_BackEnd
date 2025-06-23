@@ -12,7 +12,7 @@ public class InventoryLoggerObserver implements InventoryObserver {
 
     @Override
     public void update(Inventory inventory) {
-        logger.info("[Inventory Log] Tồn kho thuốc '{}' đã thay đổi. Số lượng mới: {}",
+        logger.info("[Inventory Log] Inventory of medicine '{}' has been updated. New quantity: {}",
                 inventory.getMedicine().getName(), inventory.getQuantity());
     }
 }
