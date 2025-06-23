@@ -14,7 +14,7 @@ public class OrderShippingInfo {
     private Integer id;
 
     @OneToOne
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", unique = true) // ✅ Thêm unique để chắc chắn
     private Order order;
 
     private String recipientName;

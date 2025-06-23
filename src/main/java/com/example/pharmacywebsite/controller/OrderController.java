@@ -28,7 +28,7 @@ public class OrderController {
     private OrderService orderService;
 
     @Autowired
-    private OrderPlacementFacade orderPlacementFacade; // ✅ Gọi Facade thay vì trực tiếp OrderService
+    private OrderPlacementFacade orderPlacementFacade;
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequest request) {
@@ -58,7 +58,7 @@ public class OrderController {
 
     @PutMapping("/{id}/status")
     public ResponseEntity<String> updateOrderStatus(
-            @PathVariable Integer id,
+            @PathVariable("id") Integer id,
             @RequestBody UpdateOrderStatusRequest request) {
         orderService.updateOrderStatus(id, request);
         return ResponseEntity.ok("Order status updated successfully");
