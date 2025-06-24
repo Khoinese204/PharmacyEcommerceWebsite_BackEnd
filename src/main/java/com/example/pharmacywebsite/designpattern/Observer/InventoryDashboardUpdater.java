@@ -12,7 +12,7 @@ public class InventoryDashboardUpdater implements InventoryObserver {
 
     @Override
     public void update(Inventory inventory) {
-        logger.info("[Dashboard] Cập nhật dữ liệu tồn kho dashboard cho thuốc '{}'.",
+        logger.info("[Dashboard] Update data storage dashboard for medicine '{}'.",
                 inventory.getMedicine().getName());
     }
 }

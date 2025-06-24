@@ -14,7 +14,7 @@ public class LowStockNotifier implements InventoryObserver {
     @Override
     public void update(Inventory inventory) {
         if (inventory.getQuantity() < LOW_STOCK_THRESHOLD) {
-            logger.warn("[Cảnh báo tồn kho] Thuốc '{}' sắp hết. Số lượng còn: {}",
+            logger.warn("[Warning] Medicine '{}' is nearly out of stock. Remaining: {}",
                     inventory.getMedicine().getName(), inventory.getQuantity());
         }
     }

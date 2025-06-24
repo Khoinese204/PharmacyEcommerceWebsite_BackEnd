@@ -5,7 +5,6 @@ import com.example.pharmacywebsite.enums.OrderStatus;
 public class DeliveredState implements OrderStatusState {
     @Override
     public void next(OrderContext ctx) {
-        // Không chuyển tiếp
         ctx.setOrderStatus(OrderStatus.DELIVERED, "Đơn hàng đã hoàn tất. Không thể chuyển tiếp.");
     }
 
