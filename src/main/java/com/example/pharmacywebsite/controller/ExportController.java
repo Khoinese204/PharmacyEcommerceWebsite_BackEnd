@@ -28,7 +28,7 @@ public class ExportController {
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDetailResponse> getExportOrderDetail(@PathVariable Integer orderId) {
+    public ResponseEntity<OrderDetailResponse> getExportOrderDetail(@PathVariable("orderId") Integer orderId) {
         OrderDetailResponse detail = orderService.getOrderById(orderId);
         return ResponseEntity.ok(detail);
     }

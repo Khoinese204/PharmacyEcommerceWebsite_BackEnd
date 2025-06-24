@@ -35,14 +35,24 @@ public class InventoryService {
     public void deductStock(List<OrderItem> orderItems) {
         for (OrderItem item : orderItems) {
             Medicine medicine = item.getMedicine();
-            List<Inventory> inventories = inventoryRepository.findByMedicineOrderByExpiredAtAsc(medicine);
+
+            List<Inventory> inventories = inventoryRepository
+                    .findByMedicineOrderByExpiredAtAsc(medicine).stream()
+                    .filter(inv ->
+                    // Không phải OUT_OF_STOCK
+                    inv.getStatus() != InventoryStatus.OUT_OF_STOCK &&
+                    // Chưa hết hạn hoặc không có hạn
+                            (inv.getExpiredAt() == null || !inv.getExpiredAt().isBefore(LocalDate.now())))
+                    .collect(Collectors.toList());
 
             int quantityToDeduct = item.getQuantity();
+
             for (Inventory inventory : inventories) {
                 if (quantityToDeduct == 0)
                     break;
 
                 int available = inventory.getQuantity();
+
                 if (available >= quantityToDeduct) {
                     inventory.setQuantity(available - quantityToDeduct);
                     inventoryRepository.save(inventory);
@@ -120,14 +130,28 @@ public class InventoryService {
     }
 
     public int getQuantityByMedicineId(Integer medicineId) {
+        LocalDate today = LocalDate.now();
         List<Inventory> inventories = inventoryRepository.findByMedicineId(medicineId);
+
         return inventories.stream()
+                .filter(inv -> (inv.getStatus() == InventoryStatus.AVAILABLE
+                        || inv.getStatus() == InventoryStatus.LOW_STOCK) &&
+                        inv.getExpiredAt() != null &&
+                        !inv.getExpiredAt().isBefore(today))
                 .mapToInt(Inventory::getQuantity)
                 .sum();
     }
 
     public Map<Integer, Integer> getTotalQuantitiesByMedicineIds(List<Integer> medicineIds) {
-        List<Inventory> inventories = inventoryRepository.findByMedicineIdIn(medicineIds);
+        LocalDate today = LocalDate.now();
+
+        List<Inventory> inventories = inventoryRepository.findByMedicineIdIn(medicineIds).stream()
+                .filter(inv -> (inv.getStatus() == InventoryStatus.AVAILABLE
+                        || inv.getStatus() == InventoryStatus.LOW_STOCK)
+                        && inv.getExpiredAt() != null
+                        && !inv.getExpiredAt().isBefore(today) // Chỉ lấy hàng còn hạn
+                )
+                .collect(Collectors.toList());
 
         return inventories.stream()
                 .collect(Collectors.groupingBy(
