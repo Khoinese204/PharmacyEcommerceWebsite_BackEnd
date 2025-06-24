@@ -29,11 +29,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,6 +56,12 @@ public class OrderService {
     private OrderShippingInfoRepository orderShippingInfoRepository;
     @Autowired
     private OrderStatusLogRepository orderStatusLogRepository;
+    @Autowired
+    private InventoryLogRepository inventoryLogRepository;
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(ExportService.class);
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
@@ -87,6 +96,15 @@ public class OrderService {
             orderItem.setUnitPrice(medicine.getPrice()); // 👈 lấy từ DB thay vì FE
 
             orderItemRepository.save(orderItem);
+
+            InventoryLog log = new InventoryLog();
+            log.setMedicine(medicine);
+            log.setType("export"); // Loại là "export" khi tạo đơn bán
+            log.setQuantity(item.getQuantity());
+            log.setRelatedOrderId(order.getId());
+            log.setCreatedAt(LocalDateTime.now());
+
+            inventoryLogRepository.save(log);
         }
 
         ShippingInfoDto info = request.getShippingInfo();
@@ -267,6 +285,11 @@ public class OrderService {
                 }
                 case PACKING -> {
                     if (targetStatus == OrderStatus.DELIVERING) {
+                        OrderShippingInfo shippingInfo = orderShippingInfoRepository
+                                .findByOrder(order);
+
+                        // updateInventoryWhenDelivering(shippingInfo);
+
                         context.next();
                     } else {
                         throw new RuntimeException("Không thể chuyển từ PACKING đến " +
@@ -290,6 +313,46 @@ public class OrderService {
             }
         }
     }
+
+    public Map<String, Long> getOrderStatusCounts() {
+        List<Order> orders = orderRepository.findAll();
+
+        return orders.stream()
+                .collect(Collectors.groupingBy(
+                        order -> order.getStatus().name(), // hoặc .toString()
+                        Collectors.counting()));
+    }
+
+    private void updateInventoryWhenDelivering(OrderShippingInfo info) {
+        Integer orderId = info.getOrder().getId();
+
+        // ✅ Lấy danh sách các mặt hàng trong đơn hàng
+        List<OrderItem> items = orderItemRepository.findByOrderId(orderId);
+
+        for (OrderItem item : items) {
+            Long medicineId = item.getMedicine().getId().longValue();
+            int quantityToSubtract = item.getQuantity();
+
+            // ✅ Tìm tất cả tồn kho của thuốc này
+            List<Inventory> inventories = inventoryRepository.findAllByMedicineId(medicineId);
+            if (inventories.isEmpty()) {
+                log.warn("Không tìm thấy tồn kho cho thuốc ID " + medicineId + ". Bỏ qua.");
+                continue;
+            }
+
+            // ✅ Trừ kho theo thứ tự: ưu tiên lô đầu tiên
+            Inventory inventory = inventories.get(0); // (Bạn có thể sắp xếp theo hạn nếu cần)
+
+            int newQuantity = inventory.getQuantity() - quantityToSubtract;
+            if (newQuantity < 0) {
+                throw new RuntimeException("Không đủ số lượng tồn kho cho thuốc ID " + medicineId);
+            }
+
+            inventory.setQuantity(newQuantity);
+            inventoryRepository.save(inventory);
+        }
+    }
+
     // @Transactional
     // public void updateOrderStatus(Integer id, UpdateOrderStatusRequest request) {
     // Order order = orderRepository.findById(id)

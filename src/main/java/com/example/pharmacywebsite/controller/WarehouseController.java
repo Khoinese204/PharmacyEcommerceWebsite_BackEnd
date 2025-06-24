@@ -3,6 +3,7 @@ package com.example.pharmacywebsite.controller;
 import com.example.pharmacywebsite.domain.User;
 import com.example.pharmacywebsite.dto.ImportOrderSummaryDto;
 import com.example.pharmacywebsite.dto.InventoryDto;
+import com.example.pharmacywebsite.dto.WarehouseDashboardDto;
 import com.example.pharmacywebsite.repository.UserRepository;
 import com.example.pharmacywebsite.service.WarehouseService;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,12 @@ public class WarehouseController {
     public ResponseEntity<List<ImportOrderSummaryDto>> getAllImportOrders() {
         List<ImportOrderSummaryDto> orders = warehouseService.getAllImportOrders();
         return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/dashboard-summary")
+    public ResponseEntity<WarehouseDashboardDto> getWarehouseDashboardSummary() {
+        WarehouseDashboardDto summary = warehouseService.getDashboardSummary();
+        return ResponseEntity.ok(summary);
     }
 
 }

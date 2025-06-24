@@ -3,6 +3,7 @@ package com.example.pharmacywebsite.service;
 import com.example.pharmacywebsite.domain.*;
 import com.example.pharmacywebsite.dto.ImportOrderSummaryDto;
 import com.example.pharmacywebsite.dto.InventoryDto;
+import com.example.pharmacywebsite.dto.WarehouseDashboardDto;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -143,6 +144,14 @@ public class WarehouseService {
             // dto.setStatus(order.getStatus()); // nếu dùng enum
             return dto;
         }).collect(Collectors.toList());
+    }
+
+    public WarehouseDashboardDto getDashboardSummary() {
+        WarehouseDashboardDto dto = new WarehouseDashboardDto();
+        dto.setTotalMedicineTypes(inventoryRepository.countDistinctMedicineTypes());
+        dto.setLowStockMedicines(inventoryRepository.countLowStock());
+        dto.setExpiredMedicines(inventoryRepository.countExpired());
+        return dto;
     }
 
 }

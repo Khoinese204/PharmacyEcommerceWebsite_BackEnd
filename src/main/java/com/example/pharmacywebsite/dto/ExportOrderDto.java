@@ -1,5 +1,7 @@
 package com.example.pharmacywebsite.dto;
 
+import java.time.LocalDateTime;
+
 import com.example.pharmacywebsite.enums.OrderStatus;
 
 import lombok.AllArgsConstructor;
@@ -18,5 +20,5 @@ public class ExportOrderDto {
     private String district;
     private String ward;
     private String addressDetail;
-    private OrderStatus status; // trạng thái của đơn hàng
+    private OrderStatus status;
 }

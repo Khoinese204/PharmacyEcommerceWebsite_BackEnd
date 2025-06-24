@@ -93,7 +93,7 @@ public class ImportOrderService {
                 inventoryObserverManager.notifyAll(inventory); // 👈 gọi Observer
             }
 
-            // Ghi log
+            
             InventoryLog log = new InventoryLog();
             log.setMedicine(medicine);
             log.setType("import");

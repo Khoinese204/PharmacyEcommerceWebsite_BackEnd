@@ -38,4 +38,13 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     List<Inventory> findByMedicineIdIn(List<Integer> ids);
 
     List<Inventory> findAllByMedicineId(Long medicineId);
+
+    @Query("SELECT COUNT(DISTINCT i.medicine.id) FROM Inventory i")
+    long countDistinctMedicineTypes();
+
+    @Query("SELECT COUNT(i) FROM Inventory i WHERE i.quantity <= 20")
+    long countLowStock(); // hoặc tuỳ bạn chọn ngưỡng
+
+    @Query("SELECT COUNT(i) FROM Inventory i WHERE i.expiredAt < CURRENT_DATE")
+    long countExpired();
 }

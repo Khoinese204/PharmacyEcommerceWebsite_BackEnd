@@ -15,6 +15,7 @@ import com.example.pharmacywebsite.service.OrderService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -62,6 +63,12 @@ public class OrderController {
             @RequestBody UpdateOrderStatusRequest request) {
         orderService.updateOrderStatus(id, request);
         return ResponseEntity.ok("Order status updated successfully");
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Long>> getOrderStats() {
+        Map<String, Long> stats = orderService.getOrderStatusCounts();
+        return ResponseEntity.ok(stats);
     }
 
 }

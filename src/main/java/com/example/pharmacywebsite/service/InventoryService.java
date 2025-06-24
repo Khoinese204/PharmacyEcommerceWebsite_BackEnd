@@ -7,6 +7,7 @@ import com.example.pharmacywebsite.domain.Medicine;
 import com.example.pharmacywebsite.domain.OrderItem;
 import com.example.pharmacywebsite.dto.InventoryDto;
 import com.example.pharmacywebsite.dto.InventoryLogDto;
+import com.example.pharmacywebsite.dto.WarehouseDashboardDto;
 import com.example.pharmacywebsite.enums.DateStatus;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.InventoryLogRepository;

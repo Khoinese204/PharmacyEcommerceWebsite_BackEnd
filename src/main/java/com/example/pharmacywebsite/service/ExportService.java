@@ -14,6 +14,8 @@ import com.example.pharmacywebsite.repository.OrderItemRepository;
 import com.example.pharmacywebsite.repository.OrderShippingInfoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +27,7 @@ public class ExportService {
     private final OrderShippingInfoRepository orderShippingInfoRepository;
     private final InventoryRepository inventoryRepository;
     private final OrderItemRepository orderItemRepository;
+    private static final Logger log = LoggerFactory.getLogger(ExportService.class);
 
     public List<ExportOrderDto> getAllExportOrders() {
         List<OrderStatus> allowedStatuses = List.of(
@@ -37,10 +40,9 @@ public class ExportService {
 
         return infos.stream()
                 .peek(info -> {
-                    // ✅ Chỉ trừ kho nếu đơn đang giao và chưa trừ
-                    if (info.getOrder().getStatus() == OrderStatus.DELIVERING) {
-                        updateInventoryWhenDelivering(info);
-                    }
+                    // if (info.getOrder().getStatus() == OrderStatus.DELIVERING) {
+                    // updateInventoryWhenDelivering(info);
+                    // }
                 })
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -72,7 +74,8 @@ public class ExportService {
             // ✅ Tìm tất cả tồn kho của thuốc này
             List<Inventory> inventories = inventoryRepository.findAllByMedicineId(medicineId);
             if (inventories.isEmpty()) {
-                throw new RuntimeException("Không tìm thấy tồn kho cho thuốc ID " + medicineId);
+                log.warn("Không tìm thấy tồn kho cho thuốc ID " + medicineId + ". Bỏ qua.");
+                continue;
             }
 
             // ✅ Ưu tiên trừ từ lô đầu tiên (sắp hết hạn)

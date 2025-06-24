@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/promotions/**").permitAll()
                 .requestMatchers("/api/pricing/**").permitAll()
                 .requestMatchers("/api/upload/**").permitAll()
+                .requestMatchers("/api/warehouse/**").permitAll()
                 .requestMatchers("/images/**").permitAll() // ✅ mở quyền truy cập ảnh
                 .requestMatchers("/api/users/**").permitAll()
                 .requestMatchers("/api/admin/dashboard/**").permitAll()
