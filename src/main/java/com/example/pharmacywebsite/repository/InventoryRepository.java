@@ -36,4 +36,6 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
     List<Inventory> findByMedicineId(Integer medicineId);
 
     List<Inventory> findByMedicineIdIn(List<Integer> ids);
+
+    List<Inventory> findAllByMedicineId(Long medicineId);
 }

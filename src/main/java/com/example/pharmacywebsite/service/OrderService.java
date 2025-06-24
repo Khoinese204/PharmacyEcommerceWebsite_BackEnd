@@ -28,6 +28,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -153,18 +154,20 @@ public class OrderService {
         List<OrderStatusLog> logs = orderStatusLogRepository.findByOrderIdOrderByUpdatedAtAsc(id);
 
         List<StatusLogDto> statusLogs = new ArrayList<>();
-        // Thêm PENDING log đầu tiên
-        statusLogs.add(new StatusLogDto(
-                order.getStatus().name(), // chuyển enum thành String
-                order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
 
-        // Thêm các log tiếp theo từ order_status_logs
-        for (OrderStatusLog log : logs) {
+        // Nếu không có log nào => thêm log mặc định từ Order entity
+        if (logs.isEmpty()) {
             statusLogs.add(new StatusLogDto(
-                    log.getStatus().name(),
-                    log.getUpdatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+                    order.getStatus().name(),
+                    order.getOrderDate().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+        } else {
+            // Nếu đã có logs thì hiển thị từ bảng logs
+            for (OrderStatusLog log : logs) {
+                statusLogs.add(new StatusLogDto(
+                        log.getStatus().name(),
+                        log.getUpdatedAt().format(DateTimeFormatter.ofPattern("HH:mm:ss dd/M/yyyy"))));
+            }
         }
-
         List<ItemDto> items = orderItemRepository.findByOrderId(id).stream().map(oi -> {
             Medicine med = oi.getMedicine();
             return new ItemDto(
@@ -238,7 +241,8 @@ public class OrderService {
         User updatedBy = userRepository.findById(request.getUpdatedByUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        OrderContext context = new OrderContext(order, updatedBy, orderRepository, orderStatusLogRepository);
+        OrderContext context = new OrderContext(order, updatedBy, orderRepository,
+                orderStatusLogRepository);
 
         OrderStatus currentStatus = order.getStatus();
         OrderStatus targetStatus = request.getNewStatus();
@@ -257,21 +261,24 @@ public class OrderService {
                     if (targetStatus == OrderStatus.PACKING) {
                         context.next();
                     } else {
-                        throw new RuntimeException("Không thể chuyển trực tiếp từ PENDING đến " + targetStatus);
+                        throw new RuntimeException("Không thể chuyển trực tiếp từ PENDING đến " +
+                                targetStatus);
                     }
                 }
                 case PACKING -> {
                     if (targetStatus == OrderStatus.DELIVERING) {
                         context.next();
                     } else {
-                        throw new RuntimeException("Không thể chuyển từ PACKING đến " + targetStatus);
+                        throw new RuntimeException("Không thể chuyển từ PACKING đến " +
+                                targetStatus);
                     }
                 }
                 case DELIVERING -> {
                     if (targetStatus == OrderStatus.DELIVERED) {
                         context.next();
                     } else {
-                        throw new RuntimeException("Không thể chuyển từ DELIVERING đến " + targetStatus);
+                        throw new RuntimeException("Không thể chuyển từ DELIVERING đến " +
+                                targetStatus);
                     }
                 }
                 case DELIVERED, CANCELLED -> {
@@ -283,5 +290,78 @@ public class OrderService {
             }
         }
     }
+    // @Transactional
+    // public void updateOrderStatus(Integer id, UpdateOrderStatusRequest request) {
+    // Order order = orderRepository.findById(id)
+    // .orElseThrow(() -> new RuntimeException("Order not found"));
+
+    // if (!id.equals(request.getOrderId())) {
+    // throw new RuntimeException("ID mismatch between path and request body");
+    // }
+
+    // User updatedBy = userRepository.findById(request.getUpdatedByUserId())
+    // .orElseThrow(() -> new RuntimeException("User not found"));
+
+    // OrderContext context = new OrderContext(order, updatedBy, orderRepository,
+    // orderStatusLogRepository);
+
+    // OrderStatus currentStatus = order.getStatus();
+    // OrderStatus targetStatus = request.getNewStatus();
+
+    // // 🔒 Check role permission
+    // String role = updatedBy.getRole().getName();
+
+    // boolean isAllowed = switch (role) {
+    // case "Admin" -> true;
+    // case "Sales", "Warehouse" -> currentStatus == OrderStatus.PENDING ||
+    // currentStatus == OrderStatus.PACKING;
+    // default -> false;
+    // };
+
+    // if (!isAllowed) {
+    // throw new RuntimeException("Bạn không có quyền cập nhật trạng thái đơn hàng ở
+    // bước này.");
+    // }
+
+    // if (currentStatus == targetStatus) {
+    // return; // trạng thái không thay đổi
+    // }
+
+    // // ✅ Áp dụng State Pattern
+    // if (targetStatus == OrderStatus.CANCELLED) {
+    // context.cancel();
+    // } else {
+    // switch (currentStatus) {
+    // case PENDING -> {
+    // if (targetStatus == OrderStatus.PACKING) {
+    // context.next();
+    // } else {
+    // throw new RuntimeException("Không thể chuyển trực tiếp từ PENDING đến " +
+    // targetStatus);
+    // }
+    // }
+    // case PACKING -> {
+    // if (targetStatus == OrderStatus.DELIVERING) {
+    // context.next();
+    // } else {
+    // throw new RuntimeException("Không thể chuyển từ PACKING đến " +
+    // targetStatus);
+    // }
+    // }
+    // case DELIVERING -> {
+    // if (targetStatus == OrderStatus.DELIVERED) {
+    // context.next();
+    // } else {
+    // throw new RuntimeException("Không thể chuyển từ DELIVERING đến " +
+    // targetStatus);
+    // }
+    // }
+    // case DELIVERED, CANCELLED -> {
+    // throw new RuntimeException("Không thể cập nhật từ trạng thái đã kết thúc");
+    // }
+    // default -> throw new RuntimeException("Trạng thái không hợp lệ");
+    // }
+    // }
+    // }
 
 }

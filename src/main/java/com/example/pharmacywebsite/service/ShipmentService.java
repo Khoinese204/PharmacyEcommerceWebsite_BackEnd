@@ -29,8 +29,17 @@ public class ShipmentService {
     public void createShipmentForOrder(Order order) {
         Shipment shipment = new Shipment();
         shipment.setOrder(order);
-        shipment.setShipmentCode("SP-" + UUID.randomUUID());
+
+        // Sinh mã vận đơn: SHP001, SHP002,...
+        long shipmentCount = shipmentRepo.count();
+        String shipmentCode = String.format("SHP%03d", shipmentCount + 1);
+        shipment.setShipmentCode(shipmentCode);
+
+        // Đơn hàng mới tạo nên chưa phân công giao hàng
         shipment.setStatus(ShipmentStatus.WAITING);
+        shipment.setShippedBy(null);
+        shipment.setShippedAt(null);
+        shipment.setDeliveredAt(null);
 
         shipmentRepo.save(shipment);
     }
