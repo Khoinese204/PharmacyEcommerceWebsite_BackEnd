@@ -12,6 +12,8 @@ import com.example.pharmacywebsite.domain.Shipment;
 import com.example.pharmacywebsite.dto.ShipmentCreateRequest;
 import com.example.pharmacywebsite.dto.ShipmentResponse;
 import com.example.pharmacywebsite.dto.ShipmentStatusUpdateRequest;
+import com.example.pharmacywebsite.dto.ShipmentUpdateRequest;
+import com.example.pharmacywebsite.enums.OrderStatus;
 import com.example.pharmacywebsite.enums.ShipmentStatus;
 import com.example.pharmacywebsite.repository.OrderRepository;
 import com.example.pharmacywebsite.repository.ShipmentRepository;
@@ -56,6 +58,10 @@ public class ShipmentService {
 
         if (request.getStatus() == ShipmentStatus.DELIVERED) {
             shipment.setDeliveredAt(LocalDateTime.now());
+
+            Order order = shipment.getOrder();
+            order.setStatus(OrderStatus.DELIVERED);
+            orderRepo.save(order);
         }
 
         return toResponse(shipmentRepo.save(shipment));
@@ -72,4 +78,17 @@ public class ShipmentService {
         res.setStatus(shipment.getStatus());
         return res;
     }
+
+    public ShipmentResponse assignShipment(Integer shipmentId, ShipmentUpdateRequest request) {
+        Shipment shipment = shipmentRepo.findById(shipmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy shipment"));
+
+        // Gán đơn vị vận chuyển và thời gian bắt đầu giao hàng
+        shipment.setShippedBy(request.getShippedBy().name()); // hoặc request.getShippedBy().toString()
+        shipment.setShippedAt(LocalDateTime.now());
+        shipment.setStatus(ShipmentStatus.SHIPPING); // chuyển trạng thái sang "đang giao"
+
+        return toResponse(shipmentRepo.save(shipment));
+    }
+
 }

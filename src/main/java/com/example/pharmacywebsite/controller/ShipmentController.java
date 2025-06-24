@@ -3,6 +3,7 @@ package com.example.pharmacywebsite.controller;
 import com.example.pharmacywebsite.dto.ShipmentCreateRequest;
 import com.example.pharmacywebsite.dto.ShipmentResponse;
 import com.example.pharmacywebsite.dto.ShipmentStatusUpdateRequest;
+import com.example.pharmacywebsite.dto.ShipmentUpdateRequest;
 import com.example.pharmacywebsite.service.ShipmentService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,5 +35,12 @@ public class ShipmentController {
             @PathVariable Integer id,
             @RequestBody ShipmentStatusUpdateRequest request) {
         return ResponseEntity.ok(shipmentService.updateShipmentStatus(id, request));
+    }
+
+    @PutMapping("/{id}/assign")
+    public ResponseEntity<ShipmentResponse> assignShipment(
+            @PathVariable Integer id,
+            @RequestBody ShipmentUpdateRequest request) {
+        return ResponseEntity.ok(shipmentService.assignShipment(id, request));
     }
 }
