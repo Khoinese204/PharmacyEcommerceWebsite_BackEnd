@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.pharmacywebsite.designpattern.Observer.InventoryObserverManager;
+import com.example.pharmacywebsite.designpattern.TemplateMethod.AbstractStockImportProcessor;
+import com.example.pharmacywebsite.designpattern.TemplateMethod.ReturnImportProcessor;
+import com.example.pharmacywebsite.designpattern.TemplateMethod.SupplierImportProcessor;
 import com.example.pharmacywebsite.domain.ImportOrder;
 import com.example.pharmacywebsite.domain.ImportOrderItem;
 import com.example.pharmacywebsite.domain.Inventory;
@@ -21,6 +24,7 @@ import com.example.pharmacywebsite.dto.ImportOrderItemRequest;
 import com.example.pharmacywebsite.dto.ImportOrderItemResponse;
 import com.example.pharmacywebsite.dto.ImportOrderRequest;
 import com.example.pharmacywebsite.dto.ImportOrderResponse;
+import com.example.pharmacywebsite.dto.TemplateImportOrderRequest;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.ImportOrderItemRepository;
 import com.example.pharmacywebsite.repository.ImportOrderRepository;
@@ -172,6 +176,22 @@ public class ImportOrderService {
 
     private InventoryStatus calculateStatus(int quantity) {
         return quantity <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE;
+    }
+
+    public String processImportOrderWithTemplate(TemplateImportOrderRequest request) {
+        AbstractStockImportProcessor<TemplateImportOrderRequest> processor;
+
+        // Ví dụ: xác định loại dựa trên request.type (supplier / return)
+        if ("supplier".equalsIgnoreCase(request.getType())) {
+            processor = new SupplierImportProcessor();
+        } else if ("return".equalsIgnoreCase(request.getType())) {
+            processor = new ReturnImportProcessor();
+        } else {
+            throw new IllegalArgumentException("Loại nhập kho không hợp lệ: " + request.getType());
+        }
+
+        processor.process(request);
+        return "Đã xử lý nhập kho thành công bằng Template Method";
     }
 
 }
