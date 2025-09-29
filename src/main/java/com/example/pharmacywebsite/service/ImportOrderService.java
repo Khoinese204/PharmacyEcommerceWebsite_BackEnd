@@ -4,11 +4,16 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.pharmacywebsite.designpattern.Observer.InventoryObserverManager;
+import com.example.pharmacywebsite.designpattern.TemplateMethod.AbstractStockImportProcessor;
+import com.example.pharmacywebsite.designpattern.TemplateMethod.ReturnImportProcessor;
+import com.example.pharmacywebsite.designpattern.TemplateMethod.SupplierImportProcessor;
 import com.example.pharmacywebsite.domain.ImportOrder;
 import com.example.pharmacywebsite.domain.ImportOrderItem;
 import com.example.pharmacywebsite.domain.Inventory;
@@ -19,6 +24,7 @@ import com.example.pharmacywebsite.dto.ImportOrderItemRequest;
 import com.example.pharmacywebsite.dto.ImportOrderItemResponse;
 import com.example.pharmacywebsite.dto.ImportOrderRequest;
 import com.example.pharmacywebsite.dto.ImportOrderResponse;
+import com.example.pharmacywebsite.dto.TemplateImportOrderRequest;
 import com.example.pharmacywebsite.enums.InventoryStatus;
 import com.example.pharmacywebsite.repository.ImportOrderItemRepository;
 import com.example.pharmacywebsite.repository.ImportOrderRepository;
@@ -60,44 +66,58 @@ public class ImportOrderService {
             item.setQuantity(itemReq.getQuantity());
             item.setUnitPrice(itemReq.getUnitPrice());
             item.setImportOrder(order);
+            items.add(item);
 
             total += itemReq.getQuantity() * itemReq.getUnitPrice();
-            items.add(item);
         }
 
         order.setTotalPrice(total);
         importOrderRepository.save(order);
         importOrderItemRepository.saveAll(items);
 
-        for (ImportOrderItem item : items) {
+        for (int i = 0; i < items.size(); i++) {
+            ImportOrderItem item = items.get(i);
+            ImportOrderItemRequest itemReq = request.getItems().get(i);
             Medicine medicine = item.getMedicine();
+            int quantity = item.getQuantity();
+            LocalDate expiredAt = itemReq.getExpiredAt();
 
-            List<Inventory> inventoryList = inventoryRepository.findByMedicineOrderByExpiredAtAsc(medicine);
+            // ✅ Tìm các lô chưa hết hạn & status còn dùng được
+            List<Inventory> inventories = inventoryRepository
+                    .findByMedicineOrderByExpiredAtAsc(medicine).stream()
+                    .filter(inv -> inv.getExpiredAt() != null && !inv.getExpiredAt().isBefore(LocalDate.now()))
+                    .filter(inv -> inv.getStatus() == InventoryStatus.AVAILABLE
+                            || inv.getStatus() == InventoryStatus.LOW_STOCK)
+                    .collect(Collectors.toList());
 
-            if (!inventoryList.isEmpty()) {
-                Inventory inventory = inventoryList.get(0);
-                int newQuantity = inventory.getQuantity() + item.getQuantity();
-                inventory.setQuantity(newQuantity);
-                inventory.setStatus(calculateStatus(newQuantity)); // ✅ cập nhật lại trạng thái
+            // ✅ Tìm xem có lô nào cùng ngày hết hạn để cộng dồn không
+            Optional<Inventory> existingLot = inventories.stream()
+                    .filter(inv -> inv.getExpiredAt().equals(expiredAt))
+                    .findFirst();
+
+            if (existingLot.isPresent()) {
+                Inventory inventory = existingLot.get();
+                int newQty = inventory.getQuantity() + quantity;
+                inventory.setQuantity(newQty);
+                inventory.setStatus(calculateStatus(newQty));
                 inventoryRepository.save(inventory);
-                inventoryObserverManager.notifyAll(inventory); // 👈 gọi Observer
+                inventoryObserverManager.notifyAll(inventory);
             } else {
-                int quantity = item.getQuantity();
-                Inventory inventory = new Inventory();
-                inventory.setMedicine(medicine);
-                inventory.setQuantity(quantity);
-                inventory.setExpiredAt(LocalDate.now().plusMonths(24));
-                inventory.setStatus(calculateStatus(quantity)); // ✅ không set cứng nữa
-                inventory.setCreatedAt(LocalDateTime.now());
-                inventoryRepository.save(inventory);
-                inventoryObserverManager.notifyAll(inventory); // 👈 gọi Observer
+                Inventory newInventory = new Inventory();
+                newInventory.setMedicine(medicine);
+                newInventory.setQuantity(quantity);
+                newInventory.setExpiredAt(expiredAt != null ? expiredAt : LocalDate.now().plusMonths(24));
+                newInventory.setStatus(calculateStatus(quantity));
+                newInventory.setCreatedAt(LocalDateTime.now());
+
+                inventoryRepository.save(newInventory);
+                inventoryObserverManager.notifyAll(newInventory);
             }
 
-            
             InventoryLog log = new InventoryLog();
             log.setMedicine(medicine);
             log.setType("import");
-            log.setQuantity(item.getQuantity());
+            log.setQuantity(quantity);
             log.setRelatedOrderId(order.getId());
             log.setCreatedAt(LocalDateTime.now());
 
@@ -156,6 +176,22 @@ public class ImportOrderService {
 
     private InventoryStatus calculateStatus(int quantity) {
         return quantity <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE;
+    }
+
+    public String processImportOrderWithTemplate(TemplateImportOrderRequest request) {
+        AbstractStockImportProcessor<TemplateImportOrderRequest> processor;
+
+        // Ví dụ: xác định loại dựa trên request.type (supplier / return)
+        if ("supplier".equalsIgnoreCase(request.getType())) {
+            processor = new SupplierImportProcessor();
+        } else if ("return".equalsIgnoreCase(request.getType())) {
+            processor = new ReturnImportProcessor();
+        } else {
+            throw new IllegalArgumentException("Loại nhập kho không hợp lệ: " + request.getType());
+        }
+
+        processor.process(request);
+        return "Đã xử lý nhập kho thành công bằng Template Method";
     }
 
 }

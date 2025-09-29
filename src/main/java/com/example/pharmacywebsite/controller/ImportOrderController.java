@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.pharmacywebsite.dto.ImportOrderRequest;
 import com.example.pharmacywebsite.dto.ImportOrderResponse;
+import com.example.pharmacywebsite.dto.TemplateImportOrderRequest;
 import com.example.pharmacywebsite.service.ImportOrderService;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,12 @@ public class ImportOrderController {
     @GetMapping("/{id}")
     public ResponseEntity<ImportOrderResponse> getImportOrderById(@PathVariable Integer id) {
         return ResponseEntity.ok(importOrderService.getImportOrderById(id));
+    }
+
+    @PostMapping("/process")
+    public ResponseEntity<String> processImportOrder(@RequestBody TemplateImportOrderRequest request) {
+        String result = importOrderService.processImportOrderWithTemplate(request);
+        return ResponseEntity.ok(result);
     }
 
 }
