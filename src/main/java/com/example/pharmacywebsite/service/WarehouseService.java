@@ -147,10 +147,14 @@ public class WarehouseService {
     }
 
     public WarehouseDashboardDto getDashboardSummary() {
+        LocalDate today = LocalDate.now();
+        LocalDate next30Days = today.plusDays(30);
+
         WarehouseDashboardDto dto = new WarehouseDashboardDto();
         dto.setTotalMedicineTypes(inventoryRepository.countDistinctMedicineTypes());
         dto.setLowStockMedicines(inventoryRepository.countLowStock());
         dto.setExpiredMedicines(inventoryRepository.countExpired());
+        dto.setNearExpiryMedicines(inventoryRepository.countNearExpiry(today, next30Days));
         return dto;
     }
 

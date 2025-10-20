@@ -38,10 +38,7 @@ public class InventoryService {
 
             List<Inventory> inventories = inventoryRepository
                     .findByMedicineOrderByExpiredAtAsc(medicine).stream()
-                    .filter(inv ->
-                    // Không phải OUT_OF_STOCK
-                    inv.getStatus() != InventoryStatus.OUT_OF_STOCK &&
-                    // Chưa hết hạn hoặc không có hạn
+                    .filter(inv -> inv.getStatus() != InventoryStatus.OUT_OF_STOCK &&
                             (inv.getExpiredAt() == null || !inv.getExpiredAt().isBefore(LocalDate.now())))
                     .collect(Collectors.toList());
 
@@ -75,15 +72,21 @@ public class InventoryService {
     public List<InventoryDto> getAllInventory() {
         List<Inventory> inventories = inventoryRepository.findAll();
         return inventories.stream().map(inv -> {
-            // ✅ Tính trạng thái kho
             InventoryStatus computedStatus = inv.getQuantity() == 0
                     ? InventoryStatus.OUT_OF_STOCK
                     : (inv.getQuantity() <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
 
-            // ✅ Tính tình trạng hạn
-            DateStatus dateStatus = inv.getExpiredAt().isBefore(LocalDate.now())
-                    ? DateStatus.EXPIRED
-                    : DateStatus.VALID;
+            DateStatus dateStatus;
+            LocalDate today = LocalDate.now();
+            LocalDate nearExpiryDate = today.plusDays(30);
+
+            if (inv.getExpiredAt().isBefore(today)) {
+                dateStatus = DateStatus.EXPIRED;
+            } else if (!inv.getExpiredAt().isAfter(nearExpiryDate)) {
+                dateStatus = DateStatus.NEAR_EXPIRY;
+            } else {
+                dateStatus = DateStatus.VALID;
+            }
 
             InventoryDto dto = new InventoryDto();
             dto.setId(inv.getId());
@@ -91,9 +94,9 @@ public class InventoryService {
             dto.setProductName(inv.getMedicine().getName());
             dto.setQuantity(inv.getQuantity());
             dto.setExpiryDate(inv.getExpiredAt().toString());
-            dto.setStatus(mapStatusToText(computedStatus)); // Còn hàng / Sắp hết / Hết hàng
+            dto.setStatus(mapStatusToText(computedStatus));
             dto.setDateStatus(mapDateStatusToText(dateStatus));
-            dto.setUnitPrice(inv.getMedicine().getOriginalPrice()); // Còn hạn / Hết hạn
+            dto.setUnitPrice(inv.getMedicine().getOriginalPrice());
             return dto;
         }).toList();
     }
@@ -110,6 +113,7 @@ public class InventoryService {
         return switch (status) {
             case EXPIRED -> "Hết hạn";
             case VALID -> "Còn hạn";
+            case NEAR_EXPIRY -> "Sắp hết hạn";
         };
     }
 
@@ -149,8 +153,7 @@ public class InventoryService {
                 .filter(inv -> (inv.getStatus() == InventoryStatus.AVAILABLE
                         || inv.getStatus() == InventoryStatus.LOW_STOCK)
                         && inv.getExpiredAt() != null
-                        && !inv.getExpiredAt().isBefore(today) // Chỉ lấy hàng còn hạn
-                )
+                        && !inv.getExpiredAt().isBefore(today))
                 .collect(Collectors.toList());
 
         return inventories.stream()
@@ -180,12 +183,10 @@ public class InventoryService {
 
         Medicine medicine = inventory.getMedicine();
 
-        // Tính trạng thái tồn kho
         InventoryStatus computedStatus = inventory.getQuantity() == 0
                 ? InventoryStatus.OUT_OF_STOCK
                 : (inventory.getQuantity() <= 20 ? InventoryStatus.LOW_STOCK : InventoryStatus.AVAILABLE);
 
-        // Tình trạng hạn sử dụng
         DateStatus dateStatus = inventory.getExpiredAt().isBefore(LocalDate.now())
                 ? DateStatus.EXPIRED
                 : DateStatus.VALID;
@@ -199,6 +200,51 @@ public class InventoryService {
         dto.setStatus(mapStatusToText(computedStatus));
         dto.setDateStatus(mapDateStatusToText(dateStatus));
         dto.setUnitPrice(medicine.getOriginalPrice());
+        return dto;
+    }
+
+    public Map<String, List<InventoryDto>> getInventoryAlerts() {
+        List<Inventory> inventories = inventoryRepository.findAll();
+        LocalDate today = LocalDate.now();
+
+        int lowStockThreshold = 20; // có thể cho phép cấu hình
+        int nearExpiryDays = 30;
+
+        List<InventoryDto> lowStockList = new ArrayList<>();
+        List<InventoryDto> nearExpiryList = new ArrayList<>();
+
+        for (Inventory inv : inventories) {
+            boolean isLowStock = inv.getQuantity() <= lowStockThreshold;
+            boolean isNearExpiry = inv.getExpiredAt() != null &&
+                    !inv.getExpiredAt().isBefore(today) &&
+                    !inv.getExpiredAt().isAfter(today.plusDays(nearExpiryDays));
+
+            if (isLowStock) {
+                lowStockList.add(convertToDto(inv));
+            }
+
+            if (isNearExpiry) {
+                nearExpiryList.add(convertToDto(inv));
+            }
+        }
+
+        return Map.of(
+                "lowStock", lowStockList,
+                "nearExpiry", nearExpiryList);
+    }
+
+    private InventoryDto convertToDto(Inventory inv) {
+        InventoryDto dto = new InventoryDto();
+        dto.setId(inv.getId());
+        dto.setBatchNumber("BATCH" + inv.getId());
+        dto.setProductName(inv.getMedicine().getName());
+        dto.setQuantity(inv.getQuantity());
+        dto.setExpiryDate(inv.getExpiredAt() != null ? inv.getExpiredAt().toString() : "N/A");
+        dto.setStatus(mapStatusToText(inv.getStatus()));
+        dto.setDateStatus(inv.getExpiredAt() != null && inv.getExpiredAt().isBefore(LocalDate.now())
+                ? "Hết hạn"
+                : "Còn hạn");
+        dto.setUnitPrice(inv.getMedicine().getOriginalPrice());
         return dto;
     }
 

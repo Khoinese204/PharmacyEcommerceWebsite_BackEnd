@@ -54,6 +54,7 @@ public class InventoryController {
         Map<Integer, Integer> map = inventoryService.getTotalQuantitiesByMedicineIds(medicineIds);
         return ResponseEntity.ok(map);
     }
+
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateInventoryQuantity(
             @PathVariable("id") int inventoryId,
@@ -72,6 +73,12 @@ public class InventoryController {
     public ResponseEntity<InventoryDto> getInventoryById(@PathVariable("id") int inventoryId) {
         InventoryDto inventory = inventoryService.getInventoryById(inventoryId);
         return ResponseEntity.ok(inventory);
+    }
+
+    @GetMapping("/alerts")
+    public ResponseEntity<Map<String, List<InventoryDto>>> getInventoryAlerts() {
+        Map<String, List<InventoryDto>> alerts = inventoryService.getInventoryAlerts();
+        return ResponseEntity.ok(alerts);
     }
 
 }
