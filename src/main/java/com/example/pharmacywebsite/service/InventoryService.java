@@ -207,7 +207,7 @@ public class InventoryService {
         List<Inventory> inventories = inventoryRepository.findAll();
         LocalDate today = LocalDate.now();
 
-        int lowStockThreshold = 20; // có thể cho phép cấu hình
+        int lowStockThreshold = 20;
         int nearExpiryDays = 30;
 
         List<InventoryDto> lowStockList = new ArrayList<>();
