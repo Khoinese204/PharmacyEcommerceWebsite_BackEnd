@@ -32,7 +32,7 @@ public class InventorySeeder implements CommandLineRunner {
             Random random = new Random();
             LocalDateTime now = LocalDateTime.now();
 
-            for (int medicineId = 104; medicineId <= 124; medicineId++) {
+            for (int medicineId = 1; medicineId <= 30; medicineId++) {
                 Optional<Medicine> optionalMedicine = medicineRepository.findById(medicineId);
                 if (optionalMedicine.isPresent()) {
                     Medicine medicine = optionalMedicine.get();

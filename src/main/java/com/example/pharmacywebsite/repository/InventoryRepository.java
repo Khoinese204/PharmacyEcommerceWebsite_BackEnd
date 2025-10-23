@@ -47,4 +47,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Integer> {
 
     @Query("SELECT COUNT(i) FROM Inventory i WHERE i.expiredAt < CURRENT_DATE")
     long countExpired();
+
+    @Query("SELECT COUNT(i) FROM Inventory i WHERE i.expiredAt BETWEEN :today AND :next30Days")
+    long countNearExpiry(@Param("today") LocalDate today, @Param("next30Days") LocalDate next30Days);
+
 }

@@ -8,4 +8,5 @@ public class WarehouseDashboardDto {
     private long totalMedicineTypes;
     private long lowStockMedicines;
     private long expiredMedicines;
+    private long nearExpiryMedicines;
 }
