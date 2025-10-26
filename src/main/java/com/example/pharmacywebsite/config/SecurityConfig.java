@@ -27,6 +27,12 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeHttpRequests()
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui.html") // Mở swagger bằng cách ấn vào link =>
+                                            // http://localhost:8080/swagger-ui/index.html#/
+                .permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/cart/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()

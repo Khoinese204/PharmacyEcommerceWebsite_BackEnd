@@ -33,6 +33,7 @@ public class RoleSeeder implements CommandLineRunner {
             Role role4 = new Role();
             role4.setId(4);
             role4.setName("Sales");
+            
 
             roleRepository.save(role1);
             roleRepository.save(role2);
