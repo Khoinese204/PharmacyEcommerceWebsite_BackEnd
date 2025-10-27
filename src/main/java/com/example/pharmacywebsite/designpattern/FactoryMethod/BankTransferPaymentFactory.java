@@ -15,7 +15,7 @@ public class BankTransferPaymentFactory implements PaymentFactory {
         tx.setPaymentMethod(order.getPaymentMethod());
         tx.setAmount(order.getTotalPrice());
         tx.setProviderTransactionId(UUID.randomUUID().toString());
-        tx.setStatus(PaymentStatus.PENDING);
+        tx.setStatus(PaymentStatus.SUCCESS);
         tx.setPaidAt(LocalDateTime.now());
         tx.setCreatedAt(LocalDateTime.now());
         return tx;
