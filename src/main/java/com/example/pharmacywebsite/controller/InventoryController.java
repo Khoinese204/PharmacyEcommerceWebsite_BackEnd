@@ -35,14 +35,6 @@ public class InventoryController {
         return inventoryService.getInventoryLogs();
     }
 
-    // @PatchMapping("/{id}")
-    // public ResponseEntity<?> updateInventoryQuantity(
-    // @PathVariable String batchNumber,
-    // @RequestBody Map<String, Integer> body) {
-    // Integer quantity = body.get("quantity");
-    // inventoryService.updateQuantity(batchNumber, quantity);
-    // return ResponseEntity.ok().build();
-    // }
     @GetMapping("/quantity/{medicineId}")
     public ResponseEntity<Integer> getInventoryQuantity(@PathVariable("medicineId") Integer medicineId) {
         int quantity = inventoryService.getQuantityByMedicineId(medicineId);
