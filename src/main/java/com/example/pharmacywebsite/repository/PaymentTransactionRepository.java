@@ -19,6 +19,8 @@ public interface PaymentTransactionRepository extends JpaRepository<PaymentTrans
 
     Optional<PaymentTransaction> findByOrder_Id(Integer orderId);
 
+    Optional<PaymentTransaction> findByProviderTransactionId(String providerTransactionId);
+
     @Query("SELECT SUM(p.amount) FROM PaymentTransaction p WHERE p.createdAt BETWEEN :start AND :end AND p.status = :status")
     Double sumAmountByCreatedAtBetweenAndStatus(@Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,

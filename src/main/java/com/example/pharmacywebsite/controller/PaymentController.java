@@ -1,13 +1,24 @@
 package com.example.pharmacywebsite.controller;
 
 import com.example.pharmacywebsite.config.VNPayConfig;
+import com.example.pharmacywebsite.domain.Order;
+import com.example.pharmacywebsite.domain.PaymentTransaction;
+import com.example.pharmacywebsite.enums.PaymentMethod;
+import com.example.pharmacywebsite.enums.PaymentStatus;
+import com.example.pharmacywebsite.repository.OrderRepository;
+import com.example.pharmacywebsite.repository.PaymentTransactionRepository;
+import com.example.pharmacywebsite.service.OrderService;
+import com.example.pharmacywebsite.service.PaymentTransactionService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -18,7 +29,8 @@ public class PaymentController {
     private VNPayConfig vnPayConfig;
 
     @PostMapping("/create-payment")
-    public Map<String, Object> createPayment(HttpServletRequest req, @RequestParam("amount") long amount)
+    public Map<String, Object> createPayment(HttpServletRequest req,
+            @RequestParam("amount") long amount)
             throws Exception {
 
         String vnp_Version = "2.1.0";
