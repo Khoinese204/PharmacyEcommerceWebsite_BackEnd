@@ -133,6 +133,7 @@ public final class ReviewTreeMapper {
                 .reviewId(safeId(r.getReviewId()))
                 .userId(r.getUser() != null ? r.getUser().getId() : null)
                 .userName(r.getUser() != null ? safe(r.getUser().getFullName()) : null)
+                .userRole(r.getUser().getRole() != null ? r.getUser().getRole().getName() : null)
                 .medicineId(r.getMedicine() != null ? r.getMedicine().getId() : null)
                 .rating(r.getRating())
                 .reviewText(safe(r.getReviewText()))

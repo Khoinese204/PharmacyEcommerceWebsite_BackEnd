@@ -22,6 +22,7 @@ public class ReviewListResponse {
         private Integer reviewId;
         private Integer userId;
         private String userName;
+        private String userRole;
         private Integer medicineId;
         private Integer rating;
         private String reviewText;

@@ -68,6 +68,7 @@ public class ReviewCommandService {
                 .reviewId(r.getReviewId())
                 .userId(user.getId())
                 .userName(user.getFullName()) // nếu DTO có field này
+                .userRole(user.getRole() != null ? user.getRole().getName() : null)
                 .medicineId(medicine.getId())
                 .rating(r.getRating())
                 .reviewText(r.getReviewText())
@@ -233,6 +234,8 @@ public class ReviewCommandService {
                     .reviewId(r.getReviewId())
                     .userId(r.getUser() != null ? r.getUser().getId() : null)
                     .userName(r.getUser() != null ? r.getUser().getFullName() : null)
+                    .userRole(r.getUser() != null && r.getUser().getRole() != null ? r.getUser().getRole().getName()
+                            : null)
                     .medicineId(r.getMedicine() != null ? r.getMedicine().getId() : null)
                     .rating(r.getRating())
                     .reviewText(r.getReviewText())

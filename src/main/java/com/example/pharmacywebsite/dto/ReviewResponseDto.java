@@ -12,6 +12,7 @@ public class ReviewResponseDto {
     private Integer reviewId;
     private Integer userId;
     private String userName; // ✅ thêm để hiển thị tên người review
+    private String userRole;
     private Integer medicineId;
 
     private Integer rating;
