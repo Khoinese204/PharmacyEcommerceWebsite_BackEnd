@@ -21,6 +21,7 @@ public class ReviewListResponse {
     public static class Item {
         private Integer reviewId;
         private Integer userId;
+        private String userName;
         private Integer medicineId;
         private Integer rating;
         private String reviewText;
@@ -39,9 +40,13 @@ public class ReviewListResponse {
         private Integer id;
         private Integer reviewId;
         private Integer userId;
+        private String userName;
         private String userRole;
         private String commentText;
         private LocalDateTime createdAt;
+
+        private Integer parentCommentId;
+        private List<CommentDto> replies;
     }
 
     @Getter

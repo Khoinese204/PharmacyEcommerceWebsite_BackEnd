@@ -9,4 +9,5 @@ import lombok.Setter;
 public class CommentCreateDto {
     private Integer userId; // thêm userId
     private String commentText;
+    private Integer parentCommentId;
 }

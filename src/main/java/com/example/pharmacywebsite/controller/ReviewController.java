@@ -6,8 +6,6 @@ import com.example.pharmacywebsite.dto.ReviewListResponse;
 import com.example.pharmacywebsite.dto.ReviewResponseDto;
 import com.example.pharmacywebsite.dto.ReviewSummaryResponse;
 import com.example.pharmacywebsite.service.ReviewCommandService;
-import com.example.pharmacywebsite.service.ReviewQueryService;
-import com.example.pharmacywebsite.service.ReviewSummaryService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -19,8 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
 
     private final ReviewCommandService commandService;
-    private final ReviewQueryService queryService;
-    private final ReviewSummaryService summaryService;
 
     /** ✅ 1) Tạo review (FE gửi userId, rating, reviewText) */
     @PostMapping
@@ -47,7 +43,7 @@ public class ReviewController {
             @PathVariable("medicineId") Integer medicineId,
             @RequestParam(value = "star", defaultValue = "all") String star,
             @RequestParam(value = "viewerId", required = false) Integer viewerId) {
-        ReviewListResponse dto = queryService.listAll(medicineId, star, viewerId);
+        ReviewListResponse dto = commandService.listAll(medicineId, star, viewerId);
         return ResponseEntity.ok(dto);
     }
 
@@ -56,7 +52,7 @@ public class ReviewController {
     @GetMapping("/summary")
     public ResponseEntity<ReviewSummaryResponse> getReviewSummary(
             @PathVariable("medicineId") Integer medicineId) {
-        ReviewSummaryResponse dto = summaryService.getSummary(medicineId);
+        ReviewSummaryResponse dto = commandService.getSummary(medicineId);
         return ResponseEntity.ok(dto);
     }
 
