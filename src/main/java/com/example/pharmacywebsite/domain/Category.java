@@ -14,4 +14,10 @@ public class Category {
     private Integer id;
 
     private String name;
+
+    @Column(name = "image_url")
+    private String imageUrl;
+
+    @Column(name = "slug", unique = true)
+    private String slug;
 }
