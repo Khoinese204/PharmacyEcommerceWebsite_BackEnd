@@ -21,6 +21,7 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @Autowired
+
     private MedicineService medicineService;
 
     @Autowired
@@ -43,7 +44,7 @@ public class CategoryController {
 
     @PostMapping
     public CategoryDto create(@ModelAttribute CategoryRequest request,
-                              @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file) {
         String filename = fileStorageService.store(file);
         return categoryService.create(request, filename);
     }
@@ -59,7 +60,7 @@ public class CategoryController {
             fileStorageService.delete(oldCategory.getImageUrl());
             filename = fileStorageService.store(file);
         }
-        
+
         return categoryService.update(id, request, filename);
     }
 

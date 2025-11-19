@@ -86,6 +86,20 @@ public class UserSeeder implements CommandLineRunner {
             sales.setRole(salesRole);
             userRepository.save(sales);
 
+            Role pharmacistRole = roleRepository.findById(5).orElseThrow();
+            User pharmacist = new User();
+            pharmacist.setFullName("Pharmacist User");
+            pharmacist.setEmail("pharmacist@example.com");
+            pharmacist.setPasswordHash(passwordEncoder.encode("pharmacist123"));
+            pharmacist.setGender("FEMALE");
+            pharmacist.setAddress("321 pharmacist St");
+            pharmacist.setAvatarUrl("https://example.com/pharmacist.png");
+            pharmacist.setBirthDate(LocalDate.parse("1992-04-04"));
+            pharmacist.setCreatedAt(now);
+            pharmacist.setUpdatedAt(now);
+            pharmacist.setRole(salesRole);
+            userRepository.save(sales);
+
             // List of customer data with various createdAt dates for dashboard stats
             List<String> names = Arrays.asList("Khách A", "Khách B", "Khách C", "Khách D", "Khách E", "Khách F",
                     "Khách G");
