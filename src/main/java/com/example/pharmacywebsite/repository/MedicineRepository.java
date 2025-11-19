@@ -30,4 +30,5 @@ public interface MedicineRepository extends JpaRepository<Medicine, Integer> {
 
     @Query("SELECT m.imageUrl FROM Medicine m WHERE m.imageUrl LIKE 'product%.jpg'")
     List<String> findAllProductImageNames();
+    List<Medicine> findByCategory_Slug(String slug);
 }

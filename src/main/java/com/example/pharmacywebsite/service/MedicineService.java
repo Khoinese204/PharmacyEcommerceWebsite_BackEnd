@@ -306,4 +306,9 @@ public class MedicineService {
         medicineRepo.save(med);
     }
 
+    public List<MedicineDto> getMedicinesByCategorySlug(String slug) {
+        List<Medicine> medicines = medicineRepo.findByCategory_Slug(slug);
+        return medicines.stream().map(this::toDto).toList();
+    }
+
 }
