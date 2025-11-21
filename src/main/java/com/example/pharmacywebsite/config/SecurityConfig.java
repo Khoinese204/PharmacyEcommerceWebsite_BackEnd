@@ -55,6 +55,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/dashboard/**").permitAll()
                 .requestMatchers("/images/**", "/images/avatar/**").permitAll()
                 .requestMatchers("/uploads/categories/**").permitAll()
+                .requestMatchers("/ws/**").permitAll() // mở quyền truy cập WebSocket endpoint
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

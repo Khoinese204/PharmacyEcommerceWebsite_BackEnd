@@ -35,6 +35,9 @@ public class User {
     @JoinColumn(name = "role_id")
     private Role role;
 
+    private LocalDateTime lastActiveAt;
+    private Boolean onlineOnSupport;
+
     // @Column
     // private Boolean isDeleted = false;
 
