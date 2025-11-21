@@ -2,8 +2,11 @@ package com.example.pharmacywebsite.controller;
 
 import com.example.pharmacywebsite.dto.CategoryDto;
 import com.example.pharmacywebsite.dto.CategoryRequest; // ✅ Import
+import com.example.pharmacywebsite.dto.MedicineDto;
 import com.example.pharmacywebsite.service.CategoryService;
 import com.example.pharmacywebsite.service.FileStorageService; // ✅ Import
+import com.example.pharmacywebsite.service.MedicineService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile; // ✅ Import
@@ -18,7 +21,11 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @Autowired
-    private FileStorageService fileStorageService;
+
+    private MedicineService medicineService;
+
+    @Autowired
+    private FileStorageService fileStorageService; 
 
     @GetMapping
     public List<CategoryDto> getAll(@RequestParam(name = "name", required = false) String search) {
@@ -30,6 +37,11 @@ public class CategoryController {
         return categoryService.getById(id);
     }
 
+    @GetMapping("/{slug}/medicines")
+    public List<MedicineDto> getMedicinesByCategorySlug(@PathVariable("slug") String slug) {
+        return medicineService.getMedicinesByCategorySlug(slug);
+    }
+
     @PostMapping
     public CategoryDto create(@ModelAttribute CategoryRequest request,
             @RequestParam("file") MultipartFile file) {
@@ -37,12 +49,11 @@ public class CategoryController {
         return categoryService.create(request, filename);
     }
 
-    // ✅ SỬA LỖI Ở ĐÂY
     @PutMapping("/{id}")
-    public CategoryDto update(@PathVariable("id") Integer id, // <-- Thêm ("id") vào đây
-            @ModelAttribute CategoryRequest request,
-            @RequestParam(value = "file", required = false) MultipartFile file) {
-
+    public CategoryDto update(@PathVariable("id") Integer id,
+                              @ModelAttribute CategoryRequest request,
+                              @RequestParam(value = "file", required = false) MultipartFile file) {
+        
         String filename = null;
         if (file != null && !file.isEmpty()) {
             CategoryDto oldCategory = categoryService.getById(id);

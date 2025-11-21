@@ -34,7 +34,7 @@ public class ImportOrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ImportOrderResponse> getImportOrderById(@PathVariable Integer id) {
+    public ResponseEntity<ImportOrderResponse> getImportOrderById(@PathVariable("id") Integer id) {
         return ResponseEntity.ok(importOrderService.getImportOrderById(id));
     }
 
@@ -43,5 +43,4 @@ public class ImportOrderController {
         String result = importOrderService.processImportOrderWithTemplate(request);
         return ResponseEntity.ok(result);
     }
-
 }
