@@ -19,14 +19,14 @@ public class ChatRoomService {
 
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
-    private final SupportStatusService supportStatusService;
+    // private final SupportStatusService supportStatusService;
 
     public ChatRoomService(ChatRoomRepository chatRoomRepository,
             UserRepository userRepository,
             SupportStatusService supportStatusService) {
         this.chatRoomRepository = chatRoomRepository;
         this.userRepository = userRepository;
-        this.supportStatusService = supportStatusService;
+        // this.supportStatusService = supportStatusService;
     }
 
     /**
@@ -37,37 +37,25 @@ public class ChatRoomService {
     @Transactional
     public ChatRoomResponse startChat(String customerEmail) {
         User customer = userRepository.findByEmail(customerEmail)
-                .orElseThrow(() -> new ApiException("Không tìm thấy khách hàng", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
 
-        // Nếu đã có room OPEN thì dùng lại (1 customer = 1 room mở)
+        // Nếu đã có room OPEN của khách thì dùng lại
         var existing = chatRoomRepository
-                .findFirstByCustomerAndStatusOrderByCreatedAtDesc(customer, ChatRoomStatus.OPEN);
+                .findFirstByCustomerAndStatusOrderByCreatedAtDesc(
+                        customer, ChatRoomStatus.OPEN);
 
         if (existing.isPresent()) {
             return ChatRoomResponse.fromEntity(existing.get());
         }
 
-        // Chọn 1 dược sĩ đang online
-        List<User> onlinePharmacists = supportStatusService.getOnlinePharmacistsEntities();
-        if (onlinePharmacists.isEmpty()) {
-            // Giống thông báo bạn dùng trước đây
-            throw new ApiException(
-                    "Hiện chưa có dược sĩ trực tuyến, vui lòng quay lại sau hoặc gọi hotline.",
-                    HttpStatus.SERVICE_UNAVAILABLE);
-        }
-
-        // Ví dụ: chọn dược sĩ đầu tiên (sau này có thể ưu tiên ít room nhất)
-        User pharmacist = onlinePharmacists.get(0);
-
+        // ⭐ Tạo room mới, CHƯA gán dược sĩ nào
         ChatRoom room = new ChatRoom();
         room.setCustomer(customer);
-        room.setPharmacist(pharmacist);
+        room.setPharmacist(null); // chưa có dược sĩ chính thức
         room.setStatus(ChatRoomStatus.OPEN);
-        room.setCreatedAt(LocalDateTime.now());
         room.setClosedAt(null);
 
         chatRoomRepository.save(room);
-
         return ChatRoomResponse.fromEntity(room);
     }
 
@@ -79,4 +67,19 @@ public class ChatRoomService {
         room.setClosedAt(LocalDateTime.now());
         chatRoomRepository.save(room);
     }
+
+    @Transactional(readOnly = true)
+    public List<ChatRoomResponse> getRoomsForPharmacist(User pharmacist) {
+        // chỉ check đúng role, không filter theo pharmacist nữa
+        String role = pharmacist.getRole() != null ? pharmacist.getRole().getName() : null;
+        if (role == null || !role.equalsIgnoreCase("PHARMACIST")) {
+            throw new RuntimeException("User is not pharmacist");
+        }
+
+        return chatRoomRepository.findByStatusOrderByCreatedAtDesc(ChatRoomStatus.OPEN)
+                .stream()
+                .map(ChatRoomResponse::fromEntity)
+                .toList();
+    }
+
 }

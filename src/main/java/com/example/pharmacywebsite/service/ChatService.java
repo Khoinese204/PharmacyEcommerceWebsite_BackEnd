@@ -41,60 +41,40 @@ public class ChatService {
          */
         @Transactional
         public ChatMessageResponse handleIncomingMessage(ChatMessageRequest req, String senderEmail) {
-
-                if (senderEmail == null) {
-                        throw new ApiException("WebSocket không xác thực (thiếu JWT)", HttpStatus.UNAUTHORIZED);
-                }
+                ChatRoom room = chatRoomRepository.findById(req.getRoomId())
+                                .orElseThrow(() -> new RuntimeException("Chat room not found"));
 
                 User sender = userRepository.findByEmail(senderEmail)
-                                .orElseThrow(() -> new ApiException("Không tìm thấy người gửi",
-                                                HttpStatus.UNAUTHORIZED));
+                                .orElseThrow(() -> new RuntimeException("Sender not found"));
 
-                ChatRoom room = chatRoomRepository.findById(req.getRoomId())
-                                .orElseThrow(() -> new ApiException("Không tìm thấy phòng chat", HttpStatus.NOT_FOUND));
-
-                // ===== KIỂM TRA QUYỀN TRONG ROOM (1 customer + 1 pharmacist + optional ADMIN)
-                // =====
-                Integer senderId = sender.getId();
-
-                boolean isCustomerInRoom = room.getCustomer() != null &&
-                                room.getCustomer().getId().equals(senderId);
-
-                boolean isPharmacistInRoom = room.getPharmacist() != null &&
-                                room.getPharmacist().getId().equals(senderId);
-
-                boolean isAdmin = sender.getRole() != null
-                                && "ADMIN".equalsIgnoreCase(sender.getRole().getName());
-
-                if (!isCustomerInRoom && !isPharmacistInRoom && !isAdmin) {
-                        throw new ApiException("Bạn không được phép gửi tin trong phòng chat này",
-                                        HttpStatus.FORBIDDEN);
-                }
-
-                // ===== XÁC ĐỊNH ROLE GỬI =====
                 String roleName = sender.getRole() != null ? sender.getRole().getName() : null;
-                ChatSenderRole senderRole;
+                ChatSenderRole senderRole = (roleName != null && roleName.equalsIgnoreCase("PHARMACIST"))
+                                ? ChatSenderRole.PHARMACIST
+                                : ChatSenderRole.CUSTOMER;
 
-                if ("PHARMACIST".equalsIgnoreCase(roleName) || isPharmacistInRoom) {
-                        senderRole = ChatSenderRole.PHARMACIST;
+                // ⭐ Quy tắc phân quyền:
+                if (senderRole == ChatSenderRole.CUSTOMER) {
+                        // customer chỉ được chat trong room của chính mình
+                        if (!room.getCustomer().getId().equals(sender.getId())) {
+                                throw new RuntimeException("You cannot send messages to this room");
+                        }
                 } else {
-                        senderRole = ChatSenderRole.CUSTOMER;
+                        // senderRole == PHARMACIST → mọi dược sĩ đều trả lời được
+                        // không cần check room.getPharmacist() nữa
                 }
 
-                // ===== LƯU TIN NHẮN =====
                 ChatMessage message = new ChatMessage();
                 message.setRoom(room);
                 message.setSender(sender);
                 message.setSenderRole(senderRole);
                 message.setContent(req.getContent());
+                // sentAt đã set default trong entity
 
                 chatMessageRepository.save(message);
 
                 ChatMessageResponse dto = ChatMessageResponse.fromEntity(message);
 
-                // ===== BROADCAST TỚI CÁC CLIENT ĐANG SUBSCRIBE ROOM =====
-                String destination = "/topic/rooms/" + room.getId();
-                messagingTemplate.convertAndSend(destination, dto);
+                messagingTemplate.convertAndSend("/topic/rooms/" + room.getId(), dto);
 
                 return dto;
         }
@@ -132,9 +112,26 @@ public class ChatService {
 
         // Giữ hàm cũ nếu chỗ khác đang dùng nội bộ, nhưng không expose ra controller
         @Transactional(readOnly = true)
-        public List<ChatMessageResponse> getMessages(Long roomId) {
+        public List<ChatMessageResponse> getMessages(Long roomId, String requesterEmail) {
+                User requester = userRepository.findByEmail(requesterEmail)
+                                .orElseThrow(() -> new ApiException("User not found", HttpStatus.UNAUTHORIZED));
+
                 ChatRoom room = chatRoomRepository.findById(roomId)
-                                .orElseThrow(() -> new ApiException("Không tìm thấy phòng chat", HttpStatus.NOT_FOUND));
+                                .orElseThrow(() -> new ApiException("Chat room not found", HttpStatus.NOT_FOUND));
+
+                boolean isCustomerOfRoom = room.getCustomer() != null
+                                && room.getCustomer().getId().equals(requester.getId());
+
+                String roleName = requester.getRole() != null
+                                ? requester.getRole().getName()
+                                : null;
+                boolean isPharmacist = roleName != null && roleName.equalsIgnoreCase("PHARMACIST");
+
+                // ⭐ Rule mới: customer của room HOẶC bất kỳ dược sĩ nào
+                if (!isCustomerOfRoom && !isPharmacist) {
+                        throw new ApiException("Bạn không có quyền xem phòng chat này", HttpStatus.FORBIDDEN);
+                }
+
                 return chatMessageRepository.findByRoomOrderBySentAtAsc(room)
                                 .stream()
                                 .map(ChatMessageResponse::fromEntity)

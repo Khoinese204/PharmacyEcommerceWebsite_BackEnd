@@ -14,4 +14,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     Optional<ChatRoom> findFirstByCustomerAndStatusOrderByCreatedAtDesc(User customer, ChatRoomStatus status);
 
     List<ChatRoom> findByPharmacistAndStatusOrderByCreatedAtDesc(User pharmacist, ChatRoomStatus status);
+
+    List<ChatRoom> findByPharmacistOrderByCreatedAtDesc(User pharmacist);
+
+    List<ChatRoom> findByStatusOrderByCreatedAtDesc(ChatRoomStatus status);
 }

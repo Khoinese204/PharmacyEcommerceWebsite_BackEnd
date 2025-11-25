@@ -56,6 +56,9 @@ public class SecurityConfig {
                 .requestMatchers("/images/**", "/images/avatar/**").permitAll()
                 .requestMatchers("/uploads/categories/**").permitAll()
                 .requestMatchers("/ws/**").permitAll() // mở quyền truy cập WebSocket endpoint
+                .requestMatchers("/api/chat/**").permitAll()
+                .requestMatchers("/api/support/**").permitAll()
+                .requestMatchers("/chat.sendMessage").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

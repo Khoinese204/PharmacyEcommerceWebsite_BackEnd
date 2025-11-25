@@ -59,7 +59,7 @@ public class WebSocketJwtAuthChannelInterceptor implements ChannelInterceptor {
 
                             accessor.setUser(authentication);
 
-                            System.out.println("WS AUTH OK -> " + email);
+                            // System.out.println("WS AUTH OK -> " + email);
                         }
                     }
                 } catch (Exception ex) {
