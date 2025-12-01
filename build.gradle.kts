@@ -18,6 +18,17 @@ repositories {
 	maven {
 		url = uri("https://repo.spring.io/milestone")
 	}
+	maven {
+		url = uri("https://repo.spring.io/snapshot")
+	}
+}
+
+val springAiVersion by extra("1.1.0")
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:$springAiVersion")
+    }
 }
 
 dependencies {
@@ -33,7 +44,9 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
-	implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M2")
+	// implementation("org.springframework.ai:spring-ai-openai-spring-boot-starter:1.0.0-M2")
+
+	implementation("org.springframework.ai:spring-ai-starter-model-google-genai")
 
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	// implementation("org.springframework.boot:spring-boot-starter-data-rest")
