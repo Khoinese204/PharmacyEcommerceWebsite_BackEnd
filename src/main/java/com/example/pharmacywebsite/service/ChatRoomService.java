@@ -4,6 +4,7 @@ import com.example.pharmacywebsite.domain.ChatRoom;
 import com.example.pharmacywebsite.domain.User;
 import com.example.pharmacywebsite.dto.ChatRoomResponse;
 import com.example.pharmacywebsite.enums.ChatRoomStatus;
+import com.example.pharmacywebsite.enums.ChatRoomType;
 import com.example.pharmacywebsite.exception.ApiException;
 import com.example.pharmacywebsite.repository.ChatRoomRepository;
 import com.example.pharmacywebsite.repository.UserRepository;
@@ -35,14 +36,14 @@ public class ChatRoomService {
      * - Nếu chưa có => tạo room mới và gán một pharmacist đang online.
      */
     @Transactional
-    public ChatRoomResponse startChat(String customerEmail) {
+    public ChatRoomResponse startChat(String customerEmail, ChatRoomType type) {
         User customer = userRepository.findByEmail(customerEmail)
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
         // Nếu đã có room OPEN của khách thì dùng lại
         var existing = chatRoomRepository
-                .findFirstByCustomerAndStatusOrderByCreatedAtDesc(
-                        customer, ChatRoomStatus.OPEN);
+                .findFirstByCustomerAndTypeAndStatusOrderByCreatedAtDesc(
+                        customer, type, ChatRoomStatus.OPEN);
 
         if (existing.isPresent()) {
             return ChatRoomResponse.fromEntity(existing.get());
@@ -51,6 +52,7 @@ public class ChatRoomService {
         // ⭐ Tạo room mới, CHƯA gán dược sĩ nào
         ChatRoom room = new ChatRoom();
         room.setCustomer(customer);
+        room.setType(type);
         room.setPharmacist(null); // chưa có dược sĩ chính thức
         room.setStatus(ChatRoomStatus.OPEN);
         room.setClosedAt(null);
@@ -69,14 +71,16 @@ public class ChatRoomService {
     }
 
     @Transactional(readOnly = true)
-    public List<ChatRoomResponse> getRoomsForPharmacist(User pharmacist) {
-        // chỉ check đúng role, không filter theo pharmacist nữa
-        String role = pharmacist.getRole() != null ? pharmacist.getRole().getName() : null;
-        if (role == null || !role.equalsIgnoreCase("PHARMACIST")) {
-            throw new RuntimeException("User is not pharmacist");
-        }
+    public List<ChatRoomResponse> getRoomsBySupportRole(ChatRoomType type) {
+        return chatRoomRepository.findByTypeAndStatusOrderByCreatedAtDesc(type, ChatRoomStatus.OPEN)
+                .stream()
+                .map(ChatRoomResponse::fromEntity)
+                .toList();
+    }
 
-        return chatRoomRepository.findByStatusOrderByCreatedAtDesc(ChatRoomStatus.OPEN)
+    @Transactional(readOnly = true)
+    public List<ChatRoomResponse> getRoomsForCustomer(Integer customerId) {
+        return chatRoomRepository.findByCustomerIdOrderByCreatedAtDesc(customerId)
                 .stream()
                 .map(ChatRoomResponse::fromEntity)
                 .toList();

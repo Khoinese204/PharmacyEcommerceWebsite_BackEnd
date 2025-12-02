@@ -3,6 +3,7 @@ package com.example.pharmacywebsite.controller;
 import com.example.pharmacywebsite.domain.User;
 import com.example.pharmacywebsite.dto.ChatMessageResponse;
 import com.example.pharmacywebsite.dto.ChatRoomResponse;
+import com.example.pharmacywebsite.enums.ChatRoomType;
 import com.example.pharmacywebsite.repository.UserRepository;
 import com.example.pharmacywebsite.service.ChatRoomService;
 import com.example.pharmacywebsite.service.ChatService;
@@ -35,9 +36,11 @@ public class ChatRestController {
 
     // Khách hàng bấm "Tư vấn với dược sĩ" (role CUSTOMER)
     @PostMapping("/start")
-    public ResponseEntity<ChatRoomResponse> startChat(Authentication authentication) {
+    public ResponseEntity<ChatRoomResponse> startChat(
+            @RequestParam(name = "type", defaultValue = "MEDICAL_ADVICE") ChatRoomType type,
+            Authentication authentication) {
         String email = authentication.getName(); // từ JWT HTTP
-        ChatRoomResponse room = chatRoomService.startChat(email);
+        ChatRoomResponse room = chatRoomService.startChat(email, type);
         return ResponseEntity.ok(room);
     }
 
@@ -52,12 +55,22 @@ public class ChatRestController {
     }
 
     @GetMapping("/rooms/my")
-    public ResponseEntity<List<ChatRoomResponse>> getRoomsForPharmacist(Authentication authentication) {
+    public ResponseEntity<List<ChatRoomResponse>> getMyRooms(Authentication authentication) {
         String email = authentication.getName();
-        User pharmacist = userRepository.findByEmail(email)
+        User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        List<ChatRoomResponse> rooms = chatRoomService.getRoomsForPharmacist(pharmacist);
+        List<ChatRoomResponse> rooms;
+
+        String roleName = currentUser.getRole().getName().toUpperCase();
+
+        if (roleName.contains("SALE") || roleName.contains("STAFF")) {
+            rooms = chatRoomService.getRoomsBySupportRole(ChatRoomType.ORDER_SUPPORT);
+        } else if (roleName.contains("PHARMACIST")) {
+            rooms = chatRoomService.getRoomsBySupportRole(ChatRoomType.MEDICAL_ADVICE);
+        } else {
+            rooms = chatRoomService.getRoomsForCustomer(currentUser.getId());
+        }
         return ResponseEntity.ok(rooms);
     }
 }

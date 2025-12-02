@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 import com.example.pharmacywebsite.enums.ChatRoomStatus;
+import com.example.pharmacywebsite.enums.ChatRoomType;
 
 @Entity
 @Table(name = "chat_rooms")
@@ -27,6 +28,10 @@ public class ChatRoom {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ChatRoomStatus status = ChatRoomStatus.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ChatRoomType type;
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -76,6 +81,14 @@ public class ChatRoom {
     }
 
     public void setCreatedAt(LocalDateTime now) {
-        this.createdAt = createdAt;
+        this.createdAt = now;
+    }
+
+    public ChatRoomType getType() {
+        return type;
+    }
+
+    public void setType(ChatRoomType type) {
+        this.type = type;
     }
 }
