@@ -20,7 +20,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     List<ChatRoom> findByStatusOrderByCreatedAtDesc(ChatRoomStatus status);
 
-    List<ChatRoom> findByTypeAndStatus(ChatRoomType type, String status);
+    // List<ChatRoom> findByTypeAndStatus(ChatRoomType type, String status);
+    List<ChatRoom> findByTypeAndStatus(ChatRoomType type, ChatRoomStatus status);
 
     List<ChatRoom> findByCustomerId(Long customerId);
 
