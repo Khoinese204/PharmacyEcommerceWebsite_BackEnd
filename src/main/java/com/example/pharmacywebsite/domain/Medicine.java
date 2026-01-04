@@ -60,4 +60,10 @@ public class Medicine {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Column(name = "forecast_status")
+    private String forecastStatus;
+
+    @Column(name = "ai_insight", columnDefinition = "TEXT")
+    private String aiInsight;
 }

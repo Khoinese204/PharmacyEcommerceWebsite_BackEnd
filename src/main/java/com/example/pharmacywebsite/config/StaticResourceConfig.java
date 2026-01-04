@@ -17,7 +17,7 @@ public class StaticResourceConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path uploadPath = Paths.get(uploadDir);
-        String absoluteUploadPath = uploadPath.toFile().getAbsolutePath();
+        String absoluteUploadPath =  uploadPath.toFile().getAbsolutePath();
 
         // Ánh xạ URL /uploads/categories/** tới thư mục vật lý trên server
         registry

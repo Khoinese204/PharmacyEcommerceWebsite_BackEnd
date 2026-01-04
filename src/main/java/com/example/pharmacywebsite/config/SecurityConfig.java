@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/support/**").permitAll()
                 .requestMatchers("/chat.sendMessage").permitAll()
                 .requestMatchers("/api/ai/**").permitAll()
+                .requestMatchers("/api/test/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
