@@ -7,6 +7,7 @@ import lombok.Data;
 @Data
 public class InventoryDto {
     private int id;
+    private int medicineId;
     private String batchNumber;
     private String productName;
     private Integer quantity;

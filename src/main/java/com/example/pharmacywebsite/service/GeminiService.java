@@ -23,8 +23,6 @@ public class GeminiService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // Dùng model 2.5 Flash Lite (Theo danh sách bạn gửi)
-    // Model này hỗ trợ context window lớn, rất hợp để gửi list dài
     private final String URL_TEMPLATE = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=%s";
 
     public ForecastResultList getBatchForecast(List<Map<String, Object>> medicineDataList) {
@@ -34,7 +32,6 @@ public class GeminiService {
 
             String currentMonth = java.time.LocalDate.now().getMonth().toString();
 
-            // 2. Tạo Prompt (Yêu cầu trả về đúng cấu trúc JSON)
             String prompt = String.format(
                     "Bạn là chuyên gia kho dược tại Việt Nam. Hiện tại đang là tháng: %s. \n" +
                             "Hãy phân tích danh sách thuốc dưới đây để dự báo nhu cầu 7 ngày tới.\n" +
@@ -49,7 +46,6 @@ public class GeminiService {
                             "OUTPUT JSON (no markdown): { \"results\": [ { \"medicineId\": int, \"predictedSales\": int, \"status\": \"LOW_STOCK\"/\"NORMAL\"/\"OVERSTOCK\"/\"TRENDING_SEASON\", \"reason\": \"<lý do ngắn gọn, nhắc đến yếu tố mùa vụ nếu có>\" } ] }",
                     currentMonth, dataJson);
 
-            // 3. Gọi API
             String url = String.format(URL_TEMPLATE, apiKey);
             Map<String, Object> requestBody = Map.of(
                     "contents", new Object[] { Map.of("parts", new Object[] { Map.of("text", prompt) }) });
@@ -61,12 +57,10 @@ public class GeminiService {
             System.out.println("🚀 Đang gửi Batch Request cho " + medicineDataList.size() + " thuốc...");
             String response = restTemplate.postForObject(url, entity, String.class);
 
-            // 4. Parse kết quả
             JsonNode root = objectMapper.readTree(response);
             String textResult = root.path("candidates").get(0).path("content").path("parts").get(0).path("text")
                     .asText();
 
-            // Lọc bỏ markdown
             if (textResult.contains("```json"))
                 textResult = textResult.replace("```json", "").replace("```", "");
             if (textResult.contains("{"))

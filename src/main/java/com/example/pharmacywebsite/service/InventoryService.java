@@ -90,6 +90,7 @@ public class InventoryService {
 
             InventoryDto dto = new InventoryDto();
             dto.setId(inv.getId());
+            dto.setMedicineId(inv.getMedicine().getId());
             dto.setBatchNumber("BATCH" + inv.getId());
             dto.setProductName(inv.getMedicine().getName());
             dto.setQuantity(inv.getQuantity());

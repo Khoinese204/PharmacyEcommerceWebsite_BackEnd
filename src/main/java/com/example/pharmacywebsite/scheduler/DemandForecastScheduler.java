@@ -32,7 +32,6 @@ public class DemandForecastScheduler {
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         List<InventoryStatus> activeStatuses = Arrays.asList(InventoryStatus.AVAILABLE, InventoryStatus.LOW_STOCK);
 
-        // 1. Chuẩn bị dữ liệu gửi đi (List các Map)
         List<Map<String, Object>> payload = new ArrayList<>();
 
         for (Medicine m : medicines) {

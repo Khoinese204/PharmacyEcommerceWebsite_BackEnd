@@ -22,7 +22,6 @@ public class PharmacywebsiteApplication {
 		SpringApplication.run(PharmacywebsiteApplication.class, args);
 	}
 
-	// Print biến môi trường để kiểm tra
 	@PostConstruct
 	public void testEnv() {
 		System.out.println("GEMINI_API_KEY (Spring) = " + env.getProperty("GEMINI_API_KEY"));

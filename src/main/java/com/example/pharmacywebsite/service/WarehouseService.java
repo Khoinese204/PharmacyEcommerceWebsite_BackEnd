@@ -37,16 +37,14 @@ public class WarehouseService {
         for (ImportOrderItem item : items) {
             Medicine medicine = item.getMedicine();
 
-            // ✅ Tạo inventory mới
             Inventory inventory = new Inventory();
             inventory.setMedicine(medicine);
             inventory.setQuantity(item.getQuantity());
-            inventory.setExpiredAt(LocalDate.now().plusYears(2)); // giả sử hết hạn sau 2 năm
-            inventory.setStatus(InventoryStatus.AVAILABLE); // bạn có thể tùy enum này
+            inventory.setExpiredAt(LocalDate.now().plusYears(2));
+            inventory.setStatus(InventoryStatus.AVAILABLE);
             inventory.setCreatedAt(now);
             inventoryRepository.save(inventory);
 
-            // ✅ Ghi log inventory
             InventoryLog log = new InventoryLog();
             log.setMedicine(medicine);
             log.setType("import");
@@ -55,12 +53,11 @@ public class WarehouseService {
             log.setCreatedAt(now);
             inventoryLogRepository.save(log);
 
-            // ✅ Ghi log xác nhận nhập kho
             WarehouseImportLog confirmLog = new WarehouseImportLog();
             confirmLog.setImportOrder(order);
             confirmLog.setMedicine(medicine);
-            confirmLog.setQuantityExpected(item.getQuantity()); // có thể thay đổi nếu có số thực nhận
-            confirmLog.setQuantityReceived(item.getQuantity()); // giả sử đúng như mong đợi
+            confirmLog.setQuantityExpected(item.getQuantity());
+            confirmLog.setQuantityReceived(item.getQuantity());
             confirmLog.setConfirmedBy(confirmedBy);
             confirmLog.setConfirmedAt(now);
             confirmLog.setNote("Xác nhận đúng số lượng");
@@ -79,7 +76,6 @@ public class WarehouseService {
             Medicine medicine = item.getMedicine();
             int quantityToExport = item.getQuantity();
 
-            // Lấy các inventory hợp lệ theo hạn sử dụng (FIFO)
             List<Inventory> inventories = inventoryRepository
                     .findByMedicineAndStatusOrderByExpiredAtAsc(medicine, InventoryStatus.AVAILABLE);
 
@@ -92,7 +88,6 @@ public class WarehouseService {
                 inventory.setQuantity(inventory.getQuantity() - deducted);
                 inventoryRepository.save(inventory);
 
-                // Log inventory
                 InventoryLog log = new InventoryLog();
                 log.setMedicine(medicine);
                 log.setType("export");
@@ -108,7 +103,6 @@ public class WarehouseService {
                 throw new RuntimeException("Không đủ tồn kho cho thuốc: " + medicine.getName());
             }
 
-            // Ghi nhận giao hàng
             WarehouseDeliveryLog deliveryLog = new WarehouseDeliveryLog();
             deliveryLog.setOrder(order);
             deliveryLog.setMedicine(medicine);
@@ -127,7 +121,7 @@ public class WarehouseService {
             dto.setProductName(inventory.getMedicine().getName());
             dto.setQuantity(inventory.getQuantity());
             dto.setExpiryDate(inventory.getExpiredAt().toString());
-            dto.setStatus(inventory.getStatus().name()); // hoặc .name() nếu không có displayName
+            dto.setStatus(inventory.getStatus().name());
             return dto;
         }).toList();
     }
